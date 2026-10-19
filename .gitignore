@@ -1,0 +1,55 @@
+# =============================================================================
+# Git ignore
+#
+# Patterns have no leading slash unless they mean the repository root, so they match at
+# any depth. CI fails a rule that ignores a file the repo already tracks.
+# =============================================================================
+
+# --- Secrets — never commit keys ---------------------------------------------
+# .env holds real keys and stays local. .env.example is the committed template.
+.env
+.env.*
+!.env.example
+
+# --- Editors and OS ----------------------------------------------------------
+.vs/
+.vscode/
+.idea/
+*.swp
+*.tmp
+*.user
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+
+# --- Node, build and test output ---------------------------------------------
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.vite/
+*.tsbuildinfo
+*.log
+
+# --- Art originals -----------------------------------------------------------
+# Full-size originals from image generation and editing. Only the compressed versions
+# under src/assets/ are committed (DR-001 in docs/PLAN.md).
+/art-source/
+
+# --- Claude Code -------------------------------------------------------------
+# .claude/settings.json is committed (team-wide). Personal overrides are not.
+.claude/settings.local.json
+
+# --- Scratch -----------------------------------------------------------------
+# Scratch work kept with the checkout by people and agents: experiment scripts, renders,
+# downloads, logs, drafts. Anything worth keeping moves into the repository proper.
+/.scratch/

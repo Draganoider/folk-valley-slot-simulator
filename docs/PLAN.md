@@ -87,9 +87,12 @@ replaced it.
 - **Decision:** `test` is the integration branch; `main` is GitHub's default branch and the
   release branch. `main` only moves when a release is cut, by fast-forwarding it to `test`,
   then a `v` tag on `main` publishes the release. Pull requests into `test` merge with a
-  merge commit that carries the description. Both branches require the *Hygiene checks*
-  status check and refuse force-pushes and deletion; no review is required, because a sole
-  owner cannot approve their own pull requests.
+  merge commit that carries the description, and feature branches are deleted once merged.
+  `test` is protected: pull requests into it need the *Hygiene checks* status check, and it
+  refuses force-pushes and deletion, while the owner's own pushes go straight through.
+  `main` is not protected, because only the owner pushes to it; the fast-forward push
+  refuses anything else on its own. No review is required anywhere, because a sole owner
+  cannot approve their own pull requests.
 - **Alternatives:** `test` as the default branch, which would make pull requests target it
   automatically and close issues on merge; declined in favour of `main` showing the released
   state. Merging `test` into `main` through a pull request, rejected because each one adds a
@@ -97,7 +100,8 @@ replaced it.
 - **Consequences:** Every pull request must choose `test` as its base (`--base test`).
   Issues close when their work reaches `main` in a release, not when it merges into `test`.
   Issue forms and the pull request template are read from `main`, so changes to them appear
-  after the next release.
+  after the next release. Nothing on GitHub stops a mistaken push to `main`, so the rule
+  against it lives in `AGENTS.md`; protect `main` if anyone else ever gets write access.
 
 ### DR-003 — Injuries are realistic but limited
 

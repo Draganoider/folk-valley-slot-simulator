@@ -1,0 +1,78 @@
+name: Task
+description: A piece of work to build
+title: "Short imperative title - what will exist when this is done"
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A plain-language opener anyone can read, then the detail. If someone has to read the
+        whole issue to decide whether to claim it, the opener is not doing its job.
+
+  - type: textarea
+    id: plain
+    attributes:
+      label: In plain terms
+      description: >
+        Three or four sentences, no jargon. What is this, why do we need it, and what does
+        finished look like? Write it for a teammate who has not read the plan.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: >
+        The deeper reasoning. If this implements a measured finding or a decision record,
+        quote it and link it - that is what stops someone "simplifying" it later.
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: What to build
+      description: The technical scope. Specific enough that two people would build the same thing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: sketch
+    attributes:
+      label: What it should look like
+      description: >
+        A code sketch, expected output, or folder layout. It does not need to compile - it
+        needs to remove ambiguity about the shape of the answer.
+    validations:
+      required: false
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Files you own
+      description: >
+        The files this issue owns. This is how several people work at once without merge
+        conflicts - stick to your list.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of done
+      description: Checkboxes. Tests belong here, not in a separate issue.
+      value: |
+        - [ ]
+        - [ ] Tests cover the above
+    validations:
+      required: true
+
+  - type: input
+    id: deps
+    attributes:
+      label: Dependencies
+      description: What blocks this, and what it blocks. Write "none - ready to start" if nothing.
+      placeholder: "Blocked by #4. Blocks #8."
+    validations:
+      required: true

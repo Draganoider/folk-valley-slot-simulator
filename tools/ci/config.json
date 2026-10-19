@@ -1,0 +1,32 @@
+{
+  "integration_branch": "test",
+  "forbidden": [
+    {"pattern": "node_modules/**", "message": "Installed dependencies are committed. npm ci recreates them; remove the folder from git."},
+    {"pattern": "dist/**", "message": "Build output is committed. npm run build recreates it."},
+    {"pattern": "coverage/**", "message": "A test coverage report is committed. It is generated per run."},
+    {"pattern": "playwright-report/**", "message": "A Playwright report is committed. It is generated per run."},
+    {"pattern": "test-results/**", "message": "Playwright test results are committed. They are generated per run."},
+    {"pattern": "*.tsbuildinfo", "message": "A TypeScript build cache is committed. tsc recreates it."},
+    {"pattern": "art-source/**", "message": "A full-size art original is committed. Originals stay local; commit the compressed version under src/assets/ (DR-001 in docs/PLAN.md)."}
+  ],
+  "python": {
+    "paths": ["tools/"],
+    "stdlib_only": true,
+    "extra_imports": {}
+  },
+  "key_in_url_globs": ["*.py", "*.js", "*.cjs", "*.mjs", "*.jsx", "*.ts", "*.tsx", "*.html"],
+  "html_link_dirs": ["docs/"],
+  "attribution_tools": ["claude", "codex", "copilot", "cursor", "chatgpt", "gpt", "gemini", "aider", "windsurf", "devin", "zed", "openai", "anthropic"],
+  "assets": {
+    "dir": "src/assets/",
+    "manifest": "src/assets/provenance.json",
+    "binary_types": [".webp", ".avif", ".png", ".ogg", ".m4a", ".woff2"],
+    "max_bytes": 1048576
+  },
+  "release": {
+    "branch": "main",
+    "tag_prefix": "v",
+    "changelog": "CHANGELOG.md",
+    "version_files": [{"path": "package.json", "pattern": "\"version\":\\s*\"([^\"]+)\""}]
+  }
+}

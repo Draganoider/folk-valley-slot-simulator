@@ -1,0 +1,58 @@
+name: Bug
+description: Something behaves incorrectly
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you observed, not what you think causes it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: >
+        Numbered, from a clean state. "Sometimes" is worth saying explicitly - an
+        intermittent bug is a different investigation from a deterministic one.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: Branch or commit
+      placeholder: "test @ abc1234"
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output or stack trace
+      description: Paste the full error. **Check it contains no key or token** before posting.
+      render: text
+    validations:
+      required: false
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS, tool versions, anything else relevant.
+    validations:
+      required: false

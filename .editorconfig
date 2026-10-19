@@ -1,0 +1,34 @@
+# EditorConfig - shared formatting rules
+#
+# Respected by Rider, Visual Studio and VS Code without a plugin. It exists so that people on
+# different editors produce identical formatting: without it, the first editor that
+# reformats a file produces a 200-line diff with two lines of real change.
+#
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{md,markdown}]
+# Two trailing spaces is a markdown line break - do not strip them.
+trim_trailing_whitespace = false
+max_line_length = 100
+
+[*.{json,jsonc,yml,yaml}]
+indent_size = 2
+
+[*.{sh,bash}]
+indent_size = 2
+
+[*.py]
+max_line_length = 120
+
+[*.{js,cjs,mjs,jsx,ts,tsx,html,css,svg}]
+indent_size = 2

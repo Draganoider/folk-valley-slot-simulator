@@ -1,0 +1,10 @@
+# Code owners for Folk Valley.
+#
+# GitHub requests a review from the owners listed here on every pull request. No branch
+# protection requires their approval: the project has one owner, who cannot approve their
+# own pull requests (DR-002 in docs/PLAN.md).
+#
+# Syntax: <path pattern>  <@user or @org/team>
+# Later matching rules win, so put narrower paths further down.
+
+*   @Draganoider

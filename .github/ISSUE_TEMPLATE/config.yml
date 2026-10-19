@@ -1,0 +1,8 @@
+# Blank issues stay enabled - with a small team, forcing a form onto every half-formed
+# thought costs more than it saves.
+blank_issues_enabled: true
+
+contact_links:
+  - name: How to contribute
+    url: https://github.com/Draganoider/folk-valley-slot-simulator/blob/test/CONTRIBUTING.md
+    about: Setup order, the branch workflow, and what a pull request needs.

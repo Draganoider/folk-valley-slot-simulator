@@ -1,0 +1,95 @@
+name: Repo hygiene
+
+# Every check lives in tools/ci/hygiene.py, which says what each one catches and why, and
+# which runs the same checks on your own machine:
+#
+#     python tools/ci/hygiene.py
+#
+# This file only calls it, one step per check, so a failure names its check in the run's
+# summary. Nothing here compiles code or runs tests.
+#
+# The job's name, "Hygiene checks", is the status check branch protection requires.
+# Renaming it makes every pull request wait for a check that never arrives.
+
+on:
+  pull_request:
+    branches: [test, main]
+    # "edited" so that fixing a pull request's description re-runs the attribution check.
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [test, main]
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Hygiene checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # the guid and attribution checks read the commits being compared
+
+      - name: List the checks
+        run: python3 tools/ci/hygiene.py --list
+
+      - name: No generated or secret files committed
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py generated
+
+      - name: JSON files parse
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py json
+
+      - name: Binary files are compressed web formats within the size budget
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py assets
+
+      - name: Every shipped asset has its source and license recorded
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py provenance
+
+      - name: .gitignore ignores no tracked file
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py gitignore
+
+      - name: Links between docs resolve
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py links
+
+      - name: Python scripts compile and import only what they promise
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py python
+
+      - name: No API key sits in a URL
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py keys
+
+      - name: The version agrees with itself
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py version
+
+      - name: Unity package manifests are well formed
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py unity-packages
+
+      - name: Unity test assemblies are excluded from player builds
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py test-asmdefs
+
+      - name: Unity .meta files are in sync
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py meta
+
+      - name: Existing .meta files keep their GUIDs
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py guids
+
+      - name: Every Unity project uses the same Unity version
+        if: ${{ !cancelled() }}
+        run: python3 tools/ci/hygiene.py unity-version
+
+      - name: No attribution lines in commits or the description
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        run: python3 tools/ci/hygiene.py attribution

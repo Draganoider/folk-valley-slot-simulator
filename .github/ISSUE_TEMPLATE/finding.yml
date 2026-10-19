@@ -1,0 +1,67 @@
+name: Finding
+description: A measurement or lesson - especially one that surprised you
+title: "Finding: "
+labels: ["finding"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Negative results are the most valuable entries.** A number without its conditions
+        cannot be trusted or reproduced; without a control arm it is an anecdote, which is
+        fine as long as you say so. File this the **same day**, then copy it into
+        `docs/findings.md`.
+
+  - type: textarea
+    id: change
+    attributes:
+      label: What changed
+      description: Precise enough that someone else could reproduce it exactly.
+    validations:
+      required: true
+
+  - type: input
+    id: control
+    attributes:
+      label: Control arm result
+      description: The baseline - the configuration you changed *from*.
+    validations:
+      required: true
+
+  - type: input
+    id: treatment
+    attributes:
+      label: Treatment arm result
+    validations:
+      required: true
+
+  - type: input
+    id: n
+    attributes:
+      label: Sample size (n)
+      description: Per arm. A difference smaller than the run-to-run noise is not a result.
+    validations:
+      required: true
+
+  - type: input
+    id: conditions
+    attributes:
+      label: Conditions
+      description: Versions, hardware, settings - whatever would change the number.
+    validations:
+      required: true
+
+  - type: textarea
+    id: conclusion
+    attributes:
+      label: What you now believe
+      description: What does this change about how we build?
+    validations:
+      required: true
+
+  - type: textarea
+    id: falsify
+    attributes:
+      label: What would change your mind
+      description: What result would make you abandon this conclusion? A finding without this is an opinion.
+    validations:
+      required: true

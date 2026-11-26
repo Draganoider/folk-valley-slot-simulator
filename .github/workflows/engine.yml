@@ -3,7 +3,8 @@ name: Engine
 # Typecheck and unit tests for the TypeScript code: the engine's RNG golden vectors,
 # configuration validation and, as they land, payouts, fixtures and short seeded
 # simulations. The full exact analysis and long simulations run in a separate nightly
-# workflow (DR-010), not here, so this job stays fast.
+# workflow (DR-010), not here, so this job stays fast. A second job builds the app and runs
+# the Playwright browser tests against the build.
 #
 # The job's name, "Typecheck and unit tests", may become a required status check on test;
 # renaming it would then make every pull request wait for a check that never arrives.
@@ -38,3 +39,37 @@ jobs:
       - name: Unit tests
         if: ${{ !cancelled() }}
         run: npm test
+
+  browser:
+    # Builds the app and runs the Playwright browser tests against the production build.
+    name: Build and browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install the locked dependencies
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Browser tests
+        run: npm run test:e2e
+
+      - name: Keep the report of a failed run
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

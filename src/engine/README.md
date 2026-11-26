@@ -25,7 +25,7 @@ Import from [`index.ts`](index.ts); everything outside this folder should.
 | [`result.ts`](result.ts) | The spin result format, presentation's only input | Done, format version 1 |
 | [`state.ts`](state.ts) | `PlayerState`, the Scar Card marks per bet level, the only state between paid spins | Done |
 | [`grid.ts`](grid.ts) | Drawing reel stops and reading the visible grid | Done |
-| [`evaluate.ts`](evaluate.ts) | `evaluateWays` (243 ways) and `countFlyers` | Seam: TODO for the base-game evaluator |
+| [`evaluate.ts`](evaluate.ts) | `evaluateWays` (243 ways), `countFlyers`, and the profile form the analyser enumerates with | Done |
 | [`features.ts`](features.ts) | `resolveBaseTrick` and `resolveSession` | Seam: TODO for the features work |
 | [`spin.ts`](spin.ts) | `spin(config, state, request)`, which wires the rest together | Seam: TODO, with the order to wire it in |
 | [`analyser.ts`](analyser.ts) | `analyse(config)`, every theoretical figure | Seam: TODO for the analyser |
@@ -116,6 +116,41 @@ SpinResult
 ```
 
 A change to the shape is a new `RESULT_FORMAT_VERSION`.
+
+## Win evaluation
+
+[`evaluate.ts`](evaluate.ts) pays 243 ways, left to right (DR-005):
+
+- A win needs the symbol or the Kicker on reels 1, 2 and 3 at least, in any row, and extends
+  over each further adjacent reel that has one. Only the longest run per symbol pays; different
+  symbols' wins add.
+- Ways are the product of matching positions per reel, wilds included; a win is pay × ways
+  integer coins, before any multiplier (DR-011). Reels a landing turns wild (`wildReels`)
+  match every row.
+- The Kicker substitutes for everything but the Flyer and pays nothing by itself: a win
+  starts from a real symbol on reel 1, so wild-only wins never pay. The configuration already
+  keeps the Kicker and landed wild reels off reel 1; the evaluator would still count a reel-1
+  wild only beside a real symbol of the win.
+- The Flyer pays nothing; `countFlyers` counts it anywhere on the grid as stopped.
+- Wins come in configuration symbol order, each with every position taking part (reel by
+  reel, top row first) for highlighting.
+
+Two forms of the same rules:
+
+- **`evaluateWays(config, grid, wildReels)`** builds the `WaysWin` records for the spin
+  result. It checks the grid's shape, its symbols and the wild reels, and throws
+  `RangeError` on a bad one.
+- **The profile form**, for hot loops. `waysTable(config)` compiles a configuration once
+  (cached per config object). `profileWindow` reduces one reel's window to a count per paying
+  symbol (`wildReelProfile` for a fully wild reel), and `waysCoins(table, profiles)` turns one
+  profile per reel into total coins with no allocation. A reel's profile depends only on its
+  window, so the analyser profiles each reel's `distinctWindows(strip, rows)` once and walks
+  their combinations, weighting each by the product of the windows' stop counts. A test
+  checks this against every stop combination of a toy configuration.
+
+Speed, measured on one development machine with Node 24: about 0.35 µs per `evaluateWays` call on the
+placeholder strips, and about 40 ns per combination in the profile form (the placeholder's
+30.5 million distinct-window combinations take about 1.3 s).
 
 ## Seams for the rest of milestone 2
 

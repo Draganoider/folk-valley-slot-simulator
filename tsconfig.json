@@ -22,6 +22,8 @@
     "src"
   ],
   "exclude": [
-    "src/worker/node"
+    "src/worker/node",
+    "src/ui",
+    "src/renderer"
   ]
 }

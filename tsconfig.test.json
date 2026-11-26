@@ -9,5 +9,7 @@
     "tests",
     "vitest.config.ts"
   ],
-  "exclude": []
+  "exclude": [
+    "tests/e2e"
+  ]
 }

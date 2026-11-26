@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
-  PLACEHOLDER_CONFIG,
+  FOLK_VALLEY_CONFIG,
   RNG_VERSION,
   STATS_FORMAT_VERSION,
   TEXT_SEED_VERSION,
@@ -34,7 +34,7 @@ export const USAGE = `Usage: npm run simulate -- --spins N [options]
   --start N          first spin index                      (default 0)
   --bet L            bet level                              (default the lowest)
   --lane N|none      Scar Card resets every N spins         (default 1000000)
-  --config FILE      configuration JSON                     (default the placeholder)
+  --config FILE      configuration JSON                     (default the shipped one)
   --workers N        worker threads; never changes results  (default CPUs - 1)
   --batch N          spins between progress reports         (default 5000)
   --out FILE         write the JSON here                    (default stdout)
@@ -87,7 +87,7 @@ export function parseCli(argv: readonly string[]): CliRun {
     seedText !== null ? formatSeed(seedFromText(seedText)) : formatSeed(parseSeed(values.seed ?? '0000000000000000'));
   const config =
     values.config === undefined
-      ? PLACEHOLDER_CONFIG
+      ? FOLK_VALLEY_CONFIG
       : assertValidConfig(JSON.parse(readFileSync(values.config, 'utf8')) as unknown);
   const lane = values.lane ?? '1000000';
   const job: SimulationJob = {

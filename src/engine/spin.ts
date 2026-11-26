@@ -2,7 +2,7 @@ import { FLYERS_TO_TRIGGER, maxWinCoins, type GameConfig } from './config';
 import { DEFAULT_EVALUATOR, resolveBaseTrick, resolveSession, type WinEvaluator } from './features';
 import { drawStops, gridFromStops } from './grid';
 import { RESULT_FORMAT_VERSION, type SessionResult, type SessionTrigger, type SpinResult } from './result';
-import { RNG_VERSION, formatSeed, parseSeed, spinStreams } from './rng';
+import { RNG_VERSION, formatSeed, parseSeed, spinStreams, type SpinStreams } from './rng';
 import { nextScarCard, scarCardMarks, withScarCardMarks, type PlayerState } from './state';
 
 /** What the player asks for: one paid spin. */
@@ -43,10 +43,25 @@ export function spin(
   request: SpinRequest,
   evaluator: WinEvaluator = DEFAULT_EVALUATOR,
 ): SpinOutcome {
+  const master = parseSeed(request.masterSeed);
+  return spinWithStreams(config, state, request, spinStreams(master, request.spinIndex), evaluator);
+}
+
+/**
+ * {@link spin} with its two streams given instead of derived from the seed. `spin` is this
+ * with `spinStreams(parseSeed(masterSeed), spinIndex)`; the analyser's exact toy test drives
+ * it with scripted streams to walk every possible sequence of draws. Play uses `spin`.
+ */
+export function spinWithStreams(
+  config: GameConfig,
+  state: PlayerState,
+  request: SpinRequest,
+  streams: SpinStreams,
+  evaluator: WinEvaluator = DEFAULT_EVALUATOR,
+): SpinOutcome {
   const { betLevel, spinIndex } = request;
   const marksBefore = scarCardMarks(config, state, betLevel);
   const master = parseSeed(request.masterSeed);
-  const streams = spinStreams(master, spinIndex);
 
   const stops = drawStops(streams.outcome, config.reels);
   const grid = gridFromStops(config.reels, stops, config.grid.rows);

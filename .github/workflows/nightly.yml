@@ -1,0 +1,68 @@
+name: Nightly analysis
+
+# The exact analysis and the long simulations (DR-010): the analyser's report, the base
+# game by brute force over every combination of distinct windows against the analyser's
+# sweep, seeded component runs, and a 20-seed sweep of 5,000,000 paid spins each, every
+# simulated figure within 4·σ/√N of the analyser's theoretical value. Too slow for every
+# push; the "Typecheck and unit tests" job runs the short forms.
+#
+# Everything runs in tools you can run locally:
+#
+#     npm run verify:long -- --out .scratch/verify-long
+#
+# The JSON reports are uploaded as artifacts. This workflow is not a required check: it
+# runs on a schedule and on demand, and a failure is a finding to investigate.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # 03:17 UTC every night
+  workflow_dispatch:
+    inputs:
+      seeds:
+        description: Seeds in the whole-game sweep
+        default: "20"
+      spins:
+        description: Paid spins per seed
+        default: "5000000"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-analysis
+  cancel-in-progress: false
+
+jobs:
+  analysis:
+    name: Exact analysis and long simulations
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      # Scheduled runs read this file from the default branch, so they check out test, where
+      # work lands; a manual run analyses the branch it was started on.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'test' || github.ref }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install the locked dependencies
+        run: npm ci
+
+      - name: Analyse, enumerate and simulate
+        env:
+          SEEDS: ${{ inputs.seeds || '20' }}
+          SPINS: ${{ inputs.spins || '5000000' }}
+        run: npm run verify:long -- --out reports --seeds "$SEEDS" --spins "$SPINS"
+
+      - name: Upload the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-analysis-${{ github.run_number }}
+          path: reports/*.json
+          if-no-files-found: error
+          retention-days: 30

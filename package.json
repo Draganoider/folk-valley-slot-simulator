@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "simulate": "tsx src/worker/node/cli.ts"
+    "simulate": "tsx src/worker/node/cli.ts",
+    "analyse": "tsx src/worker/node/analyse.ts",
+    "verify:long": "tsx src/worker/node/verify-long.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.4",

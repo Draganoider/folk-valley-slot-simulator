@@ -406,3 +406,37 @@ replaced it.
   Revisit with a heavier tail (a rare, steep top rung) if a reachable top prize matters; it
   costs σ and needs a retune. With a 14-mark card a nearly full card is worth noticeably more
   than an empty one, the state dependence DR-005 accepted; the panel shows the card's share.
+
+### DR-014 — The presentation timeline: a versioned list of back-to-back events
+
+- **Status:** accepted, 2026-11-25
+- **Context:** DR-007 put a pure timeline between the spin result and the renderer. The
+  renderer, the DOM narration, audio and the browser test hook all read it, so its shape is
+  a contract several modules are written against at once, and changing it later means
+  changing all of them.
+- **Decision:**
+  - **`buildTimeline(result, options, timings)`** in [`src/presentation/`](../src/presentation/README.md)
+    is a pure function to a `Timeline` of typed events (21 kinds), each with a start and a
+    duration in whole milliseconds, a role (`motion` or `information`), a narration line and
+    the values it shows, copied from the result. It only orders and times what the result
+    says (rule 4).
+  - **Events run back to back**: each starts where the one before ends, so at most one is
+    active at a time and "what is active at t" is a lookup. Overlap, if the renderer wants
+    it, is the renderer's (an event's renderer may keep drawing after its event ends).
+  - **Options are presentation only**: gore (Mild drops the `broken` injury beat, marks the
+    bail's patch-up as standing in for it, and hides blood, DR-009), reduced motion (motion
+    beats shorten to still crossfades, information beats keep their length), and turbo
+    (every duration divided by a factor, 2.5 by default). None changes which outcomes appear.
+  - **Skip is a seek to the end** that reports every event it passes as completed, so a
+    renderer applying end states shows every outcome. The player reads an injected clock.
+  - **`TIMELINE_FORMAT_VERSION`**, starting at 1, is recorded in every timeline next to the
+    result's format version. A change to an event's shape, a kind added or removed, or a
+    change to the order contract is a new version; tuning a duration is not.
+- **Alternatives:** Overlapping tracks (reels, rider, meters, camera) in parallel, rejected
+  for now: they make "what is active" ambiguous and the order harder to test, and the beats
+  the research describes are sequential. Timings inside the renderer, rejected because turbo,
+  skip and reduced motion would then each be a code path rather than data. An unversioned
+  schema, rejected because the browser tests and saved replays would break silently.
+- **Consequences:** The renderer draws an event as a function of time within it. Adding a
+  beat means a new kind, a new format version, the README's table and the tests' expected
+  order together.

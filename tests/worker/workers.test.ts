@@ -73,8 +73,13 @@ describe('runInWorkers (in-process workers, the real worker code)', () => {
     await expect(runInWorkers([loopbackWorker(fakeSpin)], bad, job).result).rejects.toThrow(/Worker 0 failed/);
   });
 
-  it('with the real spin, still a seam, the worker reports the error instead of hanging', async () => {
+  it('runs the real spin across workers exactly as a single thread does', async () => {
     const { spin } = await import('../../src/engine');
-    await expect(runInWorkers([loopbackWorker(spin)], config, { ...job, count: 1 }).result).rejects.toThrow(/not implemented/);
+    const realJob = { ...job, count: 800 };
+    const single = runSimulation(spin, config, realJob);
+    const workers = Array.from({ length: 3 }, () => loopbackWorker(spin));
+    const merged = await runInWorkers(workers, config, realJob, { batchSize: 150 }).result;
+    expect(merged.stats).toEqual(single.stats);
+    expect(merged.completed).toBe(800);
   });
 });

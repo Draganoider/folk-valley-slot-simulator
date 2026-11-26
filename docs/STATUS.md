@@ -24,6 +24,12 @@ each milestone means.
   placeholder configuration, the spin result format, and the `Engine` CI workflow running
   typecheck and unit tests (DR-011). See [`src/engine/README.md`](../src/engine/README.md).
 
+- Milestone 2 so far: the engine foundation (PR #1, DR-011), the 243-ways evaluator (PR #2),
+  the trick feature, Scar Card, Session and the full `spin()` (PR #3, DR-012), and the
+  simulation runner, statistics, workers and `npm run simulate` CLI (PR #4). The placeholder
+  configuration is untuned: it simulates about 73% RTP and fires features far too often
+  (see [`findings.md`](findings.md)).
+
 ## Not done yet
 
 - Milestone 1: research done and DR-005 to DR-010 accepted. The `0.1.0` release is

@@ -58,12 +58,14 @@ describe('npm run simulate', () => {
     expect(report.summary).toEqual(JSON.parse(JSON.stringify(summarise(runSimulation(fakeSpin, config, job).stats))));
   });
 
-  it('fails cleanly on bad arguments, and on the real spin until it lands', { timeout: 60_000 }, () => {
+  it('fails cleanly on bad arguments, and runs the real spin', { timeout: 60_000 }, () => {
     expect(cli('--seed', 'xyz', '--spins', '5').status).toBe(2);
     expect(cli().stderr).toMatch(/--spins is required/);
-    const real = cli('--spins', '1', '--workers', '1');
-    expect(real.status).toBe(1);
-    expect(real.stderr).toMatch(/not implemented/);
+    const real = cli('--spins', '200', '--workers', '1');
+    expect(real.status).toBe(0);
+    const report = JSON.parse(real.stdout);
+    expect(report.label).toBe('simulated');
+    expect(report.completed).toBe(200);
   });
 });
 

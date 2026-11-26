@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "types": [],
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -16,5 +18,10 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "tests", "vitest.config.ts"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/worker/node"
+  ]
 }

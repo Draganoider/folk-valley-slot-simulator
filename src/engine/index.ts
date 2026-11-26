@@ -11,3 +11,6 @@ export * from './features';
 export * from './spin';
 export * from './analyser';
 export { PLACEHOLDER_CONFIG } from './placeholder-config';
+export * from './stats';
+export * from './simulate';
+export * from './verify';

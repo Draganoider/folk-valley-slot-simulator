@@ -145,3 +145,44 @@ person repeat every failure.
   hope of 1 in 5–50 million. The Session's tail falls too fast: [1000, 2500) is already 1.3·10⁻⁸.
   A reachable cap needs a deliberately heavier tail (a rare, steep top rung) and a retune,
   noted in DR-013.
+
+### 2026-11-25 — The animation spike: cut-out rig against key-pose flipbook
+
+- **What:** DR-007's milestone 3 spike, for Kerb: a master sheet, a six-part body sheet (then
+  one edit of it), a board sheet, a reference pose and seven key poses, all from the
+  `codex-image` skill (`gpt-6.1-sol`, low effort), 16 images in about five minutes of
+  generation time, none refused. Two prototypes in PixiJS 8 played the same ollie and bail,
+  with a cut-away on impact, side by side: (a) a cut-out rig, about 85 lines of runtime with
+  pivots, JSON clips, easing and two-bone leg IK; (b) the eight poses as a flipbook with
+  70 ms cross-fades and whole-body tweens. Not committed: art and prompts in
+  `art-source/spike/`, the page, scripts and recordings in `.scratch/spike/`. Detail and
+  the proposed decision record: [`research/animation-spike.md`](research/animation-spike.md).
+- **Looks:** the rig moves smoothly and its feet stay on the deck, but it reads as a puppet:
+  thinner and flatter than the art, sleeves that rotate as rigid tubes overhead, shoes that
+  tilt with the shins (no foot bone), and a poor sitting pose. The flipbook frames look like
+  the painting, but the motion jumps between poses, cross-fades show two riders at once, and
+  the generator drifted on 6 of 7 poses (head size, torso turn, once the facing).
+- **Authoring cost per clip:** rig 69 keys on 15 channels (ollie) and 91 on 16 (bail), set by
+  hand in about 20 to 30 minutes each over three capture rounds, and no new images. Flipbook
+  12 and 21 keys on 2 to 4 channels in about 5 minutes, plus 4 to 6 generations per clip and
+  rider.
+- **Part seams:** part sheet 01 painted bare-skin caps on every joint, even under the shirt
+  and jeans, so skin showed at the hips and knees; the arms were about 25% too long and the
+  board about twice the body's scale. One edit asking for caps "made of whatever covers that
+  joint" fixed the hips, knees and shoulder; only the elbows and a sliver under the hem still
+  show. Scale and pivots were set by hand per sheet.
+- **Sizes against DR-001 (WebP q85, alpha q90, at shipping resolution for a 2× display):**
+  rig, 7 parts and the board, 74 KB in all; flipbook, 8 trimmed frames, 652 KB (about 82 KB
+  each). Both are far under 1 MB per file, but a flipbook set of 10 clips × 5 frames is about
+  4 MB per rider, about forty times the rig.
+- **Injury trial (DR-009):** a bent forearm and an open fracture at the `broken` level, as
+  edits of Kerb's reference, each with one follow-up edit asking for a clear deformity. All
+  four were accepted, with no refusal; none shows a visibly bent forearm, and only the
+  open-fracture follow-up shows a small bone tip, near the elbow. Codex said so itself, for
+  example: "The requested 30-degree mid-forearm deformity still isn't clearly rendered."
+  ComfyUI was not used, since DR-009's fallback is for refusals. Every reply is quoted in the
+  research page.
+- **What I now believe:** rigs for motion, painted held frames for the aftermath beats after
+  the cut. Codex will not draw a clear deformity on request. What would change my mind:
+  a playtest that reads the rig as paper even with the fixes, or a part sheet method that
+  keeps volume (three-quarter parts or mesh bends).

@@ -7,5 +7,18 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Draganoider/folk-valley-slot-simulator.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.2"
   }
 }

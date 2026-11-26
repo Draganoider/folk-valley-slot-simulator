@@ -41,3 +41,17 @@ person repeat every failure.
   in 8–12 spins, a Session about 1 in 150). The Kicker density on reels 2–4 and the card size
   are the levers; the tuning work must cut both. Nearly every Session ends at pain 3 because
   the placeholder ladder's bail odds are high from rung 2 up.
+
+### 2026-11-25 — Whole-game return of the placeholder configuration (simulated)
+
+- **What:** 1,000,000 paid spins of `placeholder-untuned-0` through `spin` with the real
+  evaluator (PR #2), at bet level 1, master seed `167dd6868380947e` (text seed
+  `feature-rtp-2026-11-25`), the Scar Card carried from spin to spin. Script in
+  `.scratch/feature-rates/` (not committed).
+- **Simulated:** return 72.97% of the amount bet (SE 0.30 pp, from the sample SD of 2.96×
+  bet per spin), of which base game and landed tricks 55.01% and Sessions 17.96%. No spin
+  reached the 2,500× cap.
+- **What it means:** the untuned placeholder pays well under DR-006's 96% while firing its
+  features far too often (the entry above), so its pays are low and its features cheap.
+  No theoretical figure exists yet to compare with; the analyser provides that. This is a
+  wiring check and a baseline for tuning, not a number to quote.

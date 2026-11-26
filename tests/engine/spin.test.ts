@@ -4,6 +4,8 @@ import {
   PLACEHOLDER_CONFIG,
   RESULT_FORMAT_VERSION,
   RNG_VERSION,
+  countFlyers,
+  evaluateWays,
   initialPlayerState,
   maxWinCoins,
   scarCardMarks,
@@ -330,5 +332,60 @@ describe('spin: the result format', () => {
       expect(r.totalWinCoins).toBe(Math.min(r.base.winCoins + (r.session?.totalWinCoins ?? 0), maxWinCoins(config)));
     }
     expect(kinds).toEqual(new Set(['none', 'landed', 'bailed', 'session-flyers', 'session-scar-card']));
+  });
+});
+
+describe('spin: with the real evaluator', () => {
+  it('wires the evaluator in: base pays, Flyers and every Session spin agree with it', () => {
+    let state = initialPlayerState(PLACEHOLDER_CONFIG);
+    let paid = 0;
+    let sessions = 0;
+    for (let i = 0; i < 3000; i++) {
+      const { result: r, state: next } = spin(PLACEHOLDER_CONFIG, state, { masterSeed: SEED, spinIndex: i, betLevel: BET });
+      state = next;
+      expectResultFormat(r);
+      const wild = r.base.attempt?.wildReels ?? [];
+      expect(r.base.wins).toEqual(evaluateWays(PLACEHOLDER_CONFIG, r.base.grid, wild));
+      const coins = r.base.wins.reduce((t, w) => t + w.coins, 0);
+      expect(r.base.winCoins).toBe(coins * (r.base.attempt?.winMultiplier ?? 1));
+      expect(r.base.flyers).toEqual(countFlyers(PLACEHOLDER_CONFIG, r.base.grid));
+      if (r.session) {
+        sessions++;
+        for (const sp of r.session.spins) {
+          expect(sp.wins).toEqual(evaluateWays(PLACEHOLDER_CONFIG, sp.grid, []));
+          if (!r.capped) expect(sp.winCoins).toBe(sp.wins.reduce((t, w) => t + w.coins, 0) * sp.ladderAfter.multiplier);
+        }
+      }
+      paid += r.totalWinCoins;
+    }
+    expect(sessions).toBeGreaterThan(0);
+    expect(paid).toBeGreaterThan(0);
+  });
+
+  it('pins a short run with the real pays', () => {
+    // A golden over 500 paid spins: total paid, and how many spins had each feature. If
+    // this changes without a change to the draw order or the evaluator, something is wrong.
+    let state = initialPlayerState(PLACEHOLDER_CONFIG);
+    const summary = { paid: 0, attempts: 0, landed: 0, sessions: 0, freeSpins: 0 };
+    for (let i = 0; i < 500; i++) {
+      const { result: r, state: next } = spin(PLACEHOLDER_CONFIG, state, { masterSeed: SEED, spinIndex: i, betLevel: BET });
+      state = next;
+      summary.paid += r.totalWinCoins;
+      if (r.base.attempt) summary.attempts++;
+      if (r.base.attempt?.outcome === 'landed') summary.landed++;
+      if (r.session) {
+        summary.sessions++;
+        summary.freeSpins += r.session.spins.length;
+      }
+    }
+    expect(summary).toMatchInlineSnapshot(`
+      {
+        "attempts": 217,
+        "freeSpins": 183,
+        "landed": 112,
+        "paid": 10061,
+        "sessions": 29,
+      }
+    `);
   });
 });

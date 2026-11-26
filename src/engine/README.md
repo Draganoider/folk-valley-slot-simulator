@@ -29,8 +29,12 @@ Import from [`index.ts`](index.ts); everything outside this folder should.
 | [`features.ts`](features.ts) | `resolveBaseTrick` and `resolveSession`; `WinEvaluator`, the seam tests stub | Done |
 | [`spin.ts`](spin.ts) | `spin(config, state, request, evaluator?)`, which wires the rest together | Done |
 | [`analyser.ts`](analyser.ts) | `analyse(config)`, every theoretical figure | Seam: TODO for the analyser |
+| [`stats.ts`](stats.ts) | Streaming, exactly mergeable statistics over spin results, and the observed summary | Done |
+| [`simulate.ts`](simulate.ts) | The simulation runner over an injected spin function, lanes, `splitJob` and `mergeOutcomes` | Done |
+| [`verify.ts`](verify.ts) | The DR-006 tolerance check (observed within 4·σ/√N of theoretical) and the seed-sweep check | Done |
 
-The Web Worker simulation lives in `src/worker/` (not created yet) and calls `spin`.
+The Web Worker and the Node CLI that host simulations live in [`src/worker/`](../worker/README.md);
+the runner and statistics they use are here, in `simulate.ts` and `stats.ts`.
 
 ## Random numbers
 
@@ -218,6 +222,55 @@ anyway. `nextScarCard` in [`state.ts`](state.ts) is the rule.
 defaulting to [`evaluate.ts`](evaluate.ts). The feature tests inject a stub with
 hand-checkable pays, so they test the features alone; the golden spin uses the stub too, so
 it pins the draws, not the pays.
+
+## Simulation and statistics
+
+Everything a simulation run counts, and how it is checked against the analyser. The hosts,
+the Web Worker and `npm run simulate`, are in [`src/worker/`](../worker/README.md).
+
+**The runner** ([`simulate.ts`](simulate.ts)). `runSimulation(spin, config, job)` plays
+`job.count` paid spins from `job.masterSeed`, starting at `job.startIndex`, at one bet level,
+and folds every result into the statistics. The spin function is a parameter, so the
+worker, the CLI and the tests share one loop, the tests with a stand-in. `Simulation` is
+the same loop driven in steps, which is how a worker answers a cancel between batches.
+
+**Lanes.** A spin depends on the Scar Card before it, and the card on every earlier spin.
+Each spin's random numbers stand alone (DR-011), but its state does not, so a run cannot
+be cut anywhere and played in parallel. A run is therefore made of *lanes*: at every spin
+index that is a multiple of `job.laneLength` the card is reset to empty, as if a new player
+sat down, and inside a lane the card carries over exactly as in play. `splitJob` cuts only
+at lane boundaries, where every chunk knows its starting state (empty), so the merged
+result of any number of workers **equals the single-thread run exactly**, field for field;
+the tests check it, and check that a cut ignoring the card is not exact.
+`laneLength: null` is one lane: stationary play, but one thread. Starting each lane on an
+empty card is a small transient bias against the analyser's stationary figures, about a
+card's worth of bails per lane, so long runs use long lanes (the CLI's default is 10⁶).
+Running each chunk from every possible card state would be exact for one lane too, at
+`scarCard.size` times the work; it was not worth it.
+
+**The statistics** ([`stats.ts`](stats.ts)). `SimulationStats` is plain data of integer
+counts and sums: bet and win, Σwin² (as a wide integer, since it passes 2⁵³), hits, wins
+above bet, even money, losses disguised as wins, the cap, the max win with its spin index,
+the longest run without a payout, a win histogram in × bet, trick attempts, landings and
+bails by tier, Scar Card marks and fills, Sessions by trigger (3, 4 or 5 Flyers, or the
+card) with their spins, wins, attempts, end reasons and the distributions of length, final
+multiplier and final rung, and every injury card shown. Add spins with `StatsAccumulator`;
+`mergeStats(a, b)` combines two runs, `a`'s spins before `b`'s, and is exact because it
+only adds integers (the drought and the max win merge by position). It refuses mixed
+seeds, configs or costs, and overlapping or out-of-order ranges.
+
+`summarise(stats)` gives the figures: observed RTP with its sample standard error and 95%
+interval (normal approximation), σ per spin × bet, the hit, win-above-bet, LDW, trick,
+Session and cap rates, the observed RTP split, the largest observed win and the histogram.
+Each is an `ObservedFigure` — `{ kind: 'observed', value, theoretical }` — and `theoretical`
+is null until `withTheoretical(summary, report)` fills it from values the analyser labelled
+`kind: 'theoretical'`. Nothing here computes a theoretical value (rule 6).
+
+**Verification** ([`verify.ts`](verify.ts)). `checkTolerance` and `assertWithinTolerance`
+are DR-006's test, |observed − theoretical| ≤ 4·σ/√N, with the analyser's σ, never the
+sample's (math-targets 6.2 says why); `bernoulliSigma(p)` gives σ for a rate. Both inputs
+must be labelled theoretical. `checkSeedSweep(zScores)` judges K seeds' z-scores as a set:
+mean within 4/√K of 0, variance within a band around 1.
 
 ## Tests
 

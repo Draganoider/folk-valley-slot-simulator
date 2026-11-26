@@ -23,11 +23,11 @@ Import from [`index.ts`](index.ts); everything outside this folder should.
 | [`injuries.ts`](injuries.ts) | `INJURY_CATALOGUE`, every injury id by level, the list reviewed against rule 8 | Done |
 | [`placeholder-config.ts`](placeholder-config.ts) | A complete configuration that validates. **Untuned**: its numbers are guesses | Replaced when the analyser tunes it |
 | [`result.ts`](result.ts) | The spin result format, presentation's only input | Done, format version 1 |
-| [`state.ts`](state.ts) | `PlayerState`, the Scar Card marks per bet level, the only state between paid spins | Done |
+| [`state.ts`](state.ts) | `PlayerState`, the Scar Card marks per bet level, the only state between paid spins; `nextScarCard`, the card after a spin | Done |
 | [`grid.ts`](grid.ts) | Drawing reel stops and reading the visible grid | Done |
 | [`evaluate.ts`](evaluate.ts) | `evaluateWays` (243 ways) and `countFlyers` | Seam: TODO for the base-game evaluator |
-| [`features.ts`](features.ts) | `resolveBaseTrick` and `resolveSession` | Seam: TODO for the features work |
-| [`spin.ts`](spin.ts) | `spin(config, state, request)`, which wires the rest together | Seam: TODO, with the order to wire it in |
+| [`features.ts`](features.ts) | `resolveBaseTrick` and `resolveSession`; `WinEvaluator`, the seam tests stub | Done |
+| [`spin.ts`](spin.ts) | `spin(config, state, request, evaluator?)`, which wires the rest together | Done |
 | [`analyser.ts`](analyser.ts) | `analyse(config)`, every theoretical figure | Seam: TODO for the analyser |
 
 The Web Worker simulation lives in `src/worker/` (not created yet) and calls `spin`.
@@ -117,17 +117,72 @@ SpinResult
 
 A change to the shape is a new `RESULT_FORMAT_VERSION`.
 
-## Seams for the rest of milestone 2
+## A paid spin
 
-The files marked as seams above have their signatures and a `TODO` saying what to build.
-Two things to settle while filling them in, and to write down here:
+`spin` runs these steps in order, all before anything is shown (rule 4):
 
-- **The draw order** within each stream. `drawStops` draws one `nextInt` per reel, reel 1
-  first; everything after it (rider, tier, land or bail, extra wild reels, the Session) is
-  for the features work to fix, and a golden full-spin test should pin it.
-- **A spin that both fills the Scar Card and shows 3+ Flyers.** `SessionTrigger` allows one
-  trigger per paid spin, as a Session is never retriggered; decide which wins, or whether
-  the card's mark is kept for later, and record it.
+1. Base stops and the grid.
+2. A trick attempt if a Kicker shows, from the leftmost Kicker (topmost on its reel). A
+   landing turns the Kicker's reel wild, plus the tier's extra wild reels among reels 2–4,
+   and applies the tier's multiplier. A bail shows a `scuffed` injury and pays nothing.
+3. The ways win on the grid with those wild reels, times the multiplier.
+4. Flyers: 3 or more start a Session.
+5. The Scar Card of the bet level: a bail adds a mark; the mark that fills it starts a
+   Session and resets it to 0.
+6. The Session, resolved in full with what is left under the cap.
+7. The 2,500× cap on the whole paid spin: `totalWinCoins` is at most the cap, and `capped`
+   says the spin reached it.
+
+**The Session.** One rider for the whole Session. Each free spin draws its stops, then one
+attempt from the current rung. A landing climbs a rung (staying on the top one); a bail
+raises pain and keeps the rung, adds `extraSpinsPerBail` spins at pain 1 and 2, and at pain 3
+shows `broken` and ends the Session after that spin. The spin's ways win is multiplied by the
+multiplier after its attempt. Kickers are wild but start no attempt and turn no reel wild. It
+ends `max-win` when the paid spin reaches the cap (that spin's win cut to exactly what was
+left, and this reason wins over the others), else `pain-limit`, else `spins-out`; a Session
+started with nothing left under the cap plays no spins. Every Session closes with a
+`patched-up` card.
+
+### Draw order (DR-012)
+
+Part of what a seed replays; the golden test in `tests/engine/spin.test.ts` pins it.
+`pick` below is one `nextInt(list length)`; `weighted` is one `pickWeighted`.
+
+**Outcome stream**
+
+1. Base stops: `nextInt(strip length)` per reel, reel 1 first.
+2. If a Kicker shows: rider `weighted(rider weights)`, tier `weighted(tier weights)`, land or
+   bail `weighted([land, bail])`; on a landing, for each extra wild reel, `pick` from the
+   wild-eligible reels not yet wild, ascending.
+3. If a Session starts: its rider `weighted(rider weights)`; then for each free spin its
+   stops (as in 1, on the Session strips) and its land or bail `weighted([land, bail])` from
+   the current rung.
+
+**Cosmetic stream**
+
+1. If a Kicker shows: the trick id `pick` from the rider's discipline and tier; on a bail,
+   the bail animation `pick`, then the injury id `pick` at `injuries.baseBail`.
+2. If a Session starts, for each free spin: the trick id from the rung's `trickTier`; on a
+   bail, the animation, then the injury id at the pain level's `injuries.sessionPain` entry.
+3. The Session's closing card id at `injuries.closing`.
+
+No draw is made for an event that does not happen, so a spin with no Kicker and no Session
+uses only the stops.
+
+### One spin that fills the card and shows 3+ Flyers (DR-012)
+
+A paid spin starts at most one Session. When the bail that would fill the card comes on a
+spin with 3+ Flyers, the Session starts from the Flyers, and the card **holds its last mark
+back**: it stays at size − 1 (`after` equals `before`, `filled` is false), so the next bail
+fills it. The card's Session is postponed, never spent on a Session the player was getting
+anyway. `nextScarCard` in [`state.ts`](state.ts) is the rule.
+
+### The evaluator seam
+
+`spin` and `resolveSession` take an optional `WinEvaluator` (`evaluateWays`, `countFlyers`),
+defaulting to [`evaluate.ts`](evaluate.ts). The feature tests inject a stub with
+hand-checkable pays, so they test the features alone; the golden spin uses the stub too, so
+it pins the draws, not the pays.
 
 ## Tests
 

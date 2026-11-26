@@ -35,3 +35,26 @@ export function scarCardMarks(config: GameConfig, state: PlayerState, betLevel: 
 export function withScarCardMarks(state: PlayerState, betLevel: number, marks: number): PlayerState {
   return { scarCards: { ...state.scarCards, [String(betLevel)]: marks } };
 }
+
+/**
+ * The Scar Card after one paid spin at its bet level (DR-005, DR-012).
+ *
+ * A bail adds a mark. The mark that fills the card starts a Session and resets the card to
+ * 0, unless the same spin already starts a Session from Flyers: a paid spin starts at most
+ * one Session, so the card then holds that last mark back and stays one short of full, and
+ * the next bail fills it. Nothing else changes the card.
+ *
+ * @param before Marks before the spin, 0 to size − 1.
+ */
+export function nextScarCard(
+  config: GameConfig,
+  before: number,
+  bailed: boolean,
+  flyersTrigger: boolean,
+): { readonly after: number; readonly filled: boolean } {
+  if (!bailed) return { after: before, filled: false };
+  const marked = before + 1;
+  if (marked < config.scarCard.size) return { after: marked, filled: false };
+  if (flyersTrigger) return { after: before, filled: false };
+  return { after: 0, filled: true };
+}

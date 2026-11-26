@@ -87,7 +87,10 @@ export interface ScarCardChange {
   readonly size: number;
   /** Marks before the spin. */
   readonly before: number;
-  /** Marks after the spin: before + 1 on a bail, 0 if the card filled. */
+  /**
+   * Marks after the spin: before + 1 on a bail, 0 if the card filled. Unchanged at size − 1
+   * when the bail would fill it on a spin that already starts a Session from Flyers (DR-012).
+   */
   readonly after: number;
   /** The bail filled the card, which starts a Session in this same result. */
   readonly filled: boolean;
@@ -165,6 +168,6 @@ export interface SpinResult {
   readonly session: SessionResult | null;
   /** Everything the spin paid, base and Session, after the cap. */
   readonly totalWinCoins: number;
-  /** The total reached the max-win cap and was cut to it. */
+  /** The total reached the max-win cap: it was cut to the cap, or came to exactly the cap. */
   readonly capped: boolean;
 }

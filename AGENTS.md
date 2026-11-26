@@ -47,12 +47,14 @@ taken, negative results included.
    `src/assets/provenance.json` (CI checks this). No real riders, no real bike, skate,
    scooter or energy-drink brands, no logos, and no real fail-video footage. The repository
    is public.
-8. **Injuries are realistic but limited.** Scrapes, road rash, bruises, swelling, bleeding
-   cuts, nosebleeds, split lips, a knocked-out tooth, casts, slings and neck braces are in.
-   Exposed bone, open fractures, deep wounds, gore, heavy blood spray, dismemberment, and
-   death or permanent injury played for laughs are out. Riders are adults, and every bail
-   ends with the rider patched up and okay. A Folk Valley moment is a wince, not a tragedy;
-   past that line the joke stops working.
+8. **Injuries are realistic and can be graphic, within limits (DR-009).** Scrapes, road
+   rash, bruises, swelling, bleeding cuts, nosebleeds, split lips, a knocked-out tooth,
+   limbs bent at wrong angles and open fractures with visible bone are in, the last two only
+   at the top injury level and only while the in-game gore setting is on Full (the default).
+   Gore beyond a fracture (organs, deep gashes, flaps of skin), blood pools or spray,
+   dismemberment, and death or permanent injury played for laughs are out. Riders are adults,
+   and every bail, however bad, ends with the rider patched up and okay. A Folk Valley moment
+   makes you wince; it never becomes a tragedy.
 9. **Sessions share the workspace.** Several Claude Code sessions may work in this checkout
    at once. Read a file before editing it, edit only what your task covers, and never revert
    or reformat changes you did not make; report a needed change outside your task instead of

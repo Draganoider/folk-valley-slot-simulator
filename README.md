@@ -6,6 +6,10 @@ bails that come with them. Virtual credits only.
 > **Status:** Pre-alpha. The repository is set up and the game mechanics are being
 > researched; there is no playable build yet.
 
+> **Content note:** the game shows realistic sports injuries, including blood and broken
+> limbs with visible bone, on its default Full setting. A Mild setting hides them. Every rider
+> ends up patched up and okay.
+
 ## Repository layout
 
 | Path | Contents |

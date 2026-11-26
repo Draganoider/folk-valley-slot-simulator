@@ -27,6 +27,10 @@
     "branch": "main",
     "tag_prefix": "v",
     "changelog": "CHANGELOG.md",
-    "version_files": [{"path": "package.json", "pattern": "\"version\":\\s*\"([^\"]+)\""}]
+    "version_files": [
+      {"path": "package.json", "pattern": "\"version\":\\s*\"([^\"]+)\""},
+      {"path": "package-lock.json", "pattern": "\"version\":\\s*\"([^\"]+)\""},
+      {"path": "package-lock.json", "pattern": "\"\":\\s*\\{\\s*\"name\":\\s*\"[^\"]+\",\\s*\"version\":\\s*\"([^\"]+)\""}
+    ]
   }
 }

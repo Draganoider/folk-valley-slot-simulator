@@ -8,10 +8,19 @@ While the version stays `0.x`, anything may change in any release.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-25
+
 ### Added
 - The engine foundation: a seeded `xoshiro128**` RNG with one stream per paid spin, the
   game configuration with its validator, an untuned placeholder configuration, and the spin
   result format, with unit tests and an `Engine` CI workflow.
+- The game design (milestone 1): research on mechanics, math targets, rendering and art
+  direction in `docs/research/`, and decision records DR-005 to DR-010, including realistic
+  injuries behind a gore setting that defaults to Full (DR-009).
+- The 243-ways base-game evaluator, with the Kicker wild on reels 2–4 and the Flyer count,
+  plus a fast profile form that the analyser reuses.
+- The simulation runner: streaming, mergeable statistics labelled as observed, Web Workers
+  whose split runs equal a single thread exactly, and `npm run simulate` for Node.
 - The trick feature, the per-bet Scar Card and the trick-ladder Session, wired into a full
   `spin()` with the 2,500× cap; the draw order and the card-and-Flyers rule are DR-012.
 - The exact analyser: every theoretical figure (RTP and its split, σ, hit, win-above-bet and

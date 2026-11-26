@@ -149,8 +149,10 @@ to the order above is a new version (DR-014); a tuned duration is not.
 
 ## Tests
 
-`tests/presentation/` runs 20,000 seeded paid spins of `folk-valley-96-v1` and checks, under
-every option: the kinds in order equal an independent statement of this README's order
+`tests/presentation/` plays 20,000 seeded paid spins of `folk-valley-96-v1` once and keeps a
+fixed set of about 140 (`propertySample`: Sessions of both triggers, base landings and bails,
+plain spins; a test fails if it stops covering every outcome and event kind). Under every
+option it checks: the kinds in order equal an independent statement of this README's order
 (`sample.ts`), every value agrees with the result, the timeline is pure and plain data, Mild
 hides `broken` and blood, reduced motion keeps every information beat, turbo scales every
 duration, and the player visits every event exactly once and ends on the final state

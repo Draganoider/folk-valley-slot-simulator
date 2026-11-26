@@ -10,16 +10,15 @@ import {
   type TimelineEvent,
   type TimelineOptions,
 } from '../../src/presentation';
-import { expectedKinds, sampleResults } from './sample';
+import { expectedKinds, propertySample } from './sample';
 
 const FULL: TimelineOptions = { gore: 'full', reducedMotion: false, turbo: false };
 const MILD: TimelineOptions = { ...FULL, gore: 'mild' };
 const REDUCED: TimelineOptions = { ...FULL, reducedMotion: true };
 const TURBO: TimelineOptions = { ...FULL, turbo: true };
 
-const SAMPLE = sampleResults(20_000);
-/** Every sampled result with something beyond a plain spin, plus the first 500 plain ones. */
-const INTERESTING = SAMPLE.filter((r, i) => i < 500 || r.base.attempt !== null || r.session !== null);
+/** About 140 seeded results covering every outcome; see `propertySample`. */
+const INTERESTING = propertySample();
 
 function of<K extends TimelineEvent['kind']>(t: Timeline, kind: K): Extract<TimelineEvent, { kind: K }>[] {
   return t.events.filter((e): e is Extract<TimelineEvent, { kind: K }> => e.kind === kind);
@@ -175,7 +174,7 @@ describe('buildTimeline over seeded spins of folk-valley-96-v1', () => {
   });
 
   it('is a pure function: same timeline every time, plain data, the result untouched', () => {
-    for (const r of INTERESTING.slice(0, 400)) {
+    for (const r of INTERESTING) {
       const before = structuredClone(r);
       const a = buildTimeline(r);
       expect(buildTimeline(r)).toEqual(a);
@@ -244,7 +243,7 @@ describe('reduced motion', () => {
 
 describe('turbo', () => {
   it('divides every duration by the turbo factor', () => {
-    for (const r of INTERESTING.slice(0, 2000)) {
+    for (const r of INTERESTING) {
       const full = buildTimeline(r, FULL);
       const turbo = buildTimeline(r, TURBO);
       expect(turbo.events.map(content)).toEqual(full.events.map(content));

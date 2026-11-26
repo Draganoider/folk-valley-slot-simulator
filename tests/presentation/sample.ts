@@ -20,6 +20,33 @@ export function sampleResults(count: number, masterSeed = SAMPLE_SEED): SpinResu
 }
 
 /**
+ * A small fixed set from {@link sampleResults}, chosen to cover every outcome while keeping
+ * the property tests fast: the first `perKind` Sessions of each trigger (with their landings,
+ * bails at every pain level and both usual endings), the first `perKind` base landings and
+ * base bails (card marks and fills among them), and a few plain spins. The coverage test in
+ * timeline.test.ts fails if a change to the engine or the seed leaves a gap.
+ */
+export function propertySample(perKind = 20, from: readonly SpinResult[] = sampleResults(20_000)): SpinResult[] {
+  const picked = new Set<SpinResult>();
+  const take = (p: (r: SpinResult) => boolean, n: number) => {
+    let k = 0;
+    for (const r of from) {
+      if (k >= n) break;
+      if (p(r)) {
+        picked.add(r);
+        k++;
+      }
+    }
+  };
+  take((r) => r.session?.trigger.kind === 'flyers', perKind);
+  take((r) => r.session?.trigger.kind === 'scar-card', perKind);
+  take((r) => r.session === null && r.base.attempt?.outcome === 'landed', perKind * 2);
+  take((r) => r.session === null && r.base.attempt?.outcome === 'bailed', perKind * 2);
+  take((r) => r.base.attempt === null && r.session === null, perKind);
+  return from.filter((r) => picked.has(r));
+}
+
+/**
  * The event kinds a result implies, in order, written out from the README's contract
  * independently of `buildTimeline`, so the two check each other.
  */

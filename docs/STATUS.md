@@ -18,12 +18,19 @@ each milestone means.
   records DR-001 to DR-004, the hygiene checks CI runs, and the release tooling.
 - Milestone 0: hygiene CI green on `test` and `main`.
 - Milestone 1 research: mechanics, math targets, rendering and art direction, in
-  [`research/`](research/), with decision records DR-005 to DR-008.
+  [`research/`](research/), with decision records DR-005 to DR-010.
+- Milestone 2 engine foundation: the TypeScript and Vitest scaffold, the seeded RNG with
+  golden vectors, the configuration types and validator, the injury catalogue, an untuned
+  placeholder configuration, the spin result format, and the `Engine` CI workflow running
+  typecheck and unit tests (DR-011). See [`src/engine/README.md`](../src/engine/README.md).
 
 ## Not done yet
 
 - Milestone 1: research done and DR-005 to DR-010 accepted. The `0.1.0` release is
   deferred by the owner.
-- Milestone 2, the engine and simulation, is starting.
+- Milestone 2, the engine and simulation, is under way. Still to build on the foundation:
+  the base-game ways evaluator, the trick and Session features with `spin()`, the Web Worker
+  simulation, the exact analyser with a tuned configuration, and the nightly analysis
+  workflow (DR-010). The seams are listed in [`src/engine/README.md`](../src/engine/README.md).
 
 ## Groundwork beside the milestones

@@ -64,13 +64,13 @@ taken, negative results included.
 
 | Path | Contents |
 |---|---|
-| `src/engine/` | *(planned)* The slot math: seeded RNG, reels, paytable, trick and bail features, RTP. Pure TypeScript (rule 5) |
+| `src/engine/` | The slot math: seeded RNG, reels, paytable, trick and bail features, RTP. Pure TypeScript (rule 5); [`src/engine/README.md`](src/engine/README.md) maps it |
 | `src/worker/` | *(planned)* The Web Worker that runs high-volume simulations |
 | `src/presentation/` | *(planned)* Turns a finished spin result into a timeline of tricks, bails and wins |
 | `src/renderer/` | *(planned)* The game scene; the rendering technology is decided in milestone 1 |
 | `src/ui/` | *(planned)* The application UI around the scene |
 | `src/assets/` | *(planned)* Shipped, compressed assets and `provenance.json`, the record of where each came from |
-| `tests/` | *(planned)* Unit tests and browser tests |
+| `tests/` | Unit tests (`npm test`); browser tests are planned |
 | `docs/` | Everything written down that is not code — [`docs/README.md`](docs/README.md) maps it |
 | `tools/ci/` | `hygiene.py`, every check CI runs, runnable on your machine; `release.py`, the mechanical steps of a release |
 

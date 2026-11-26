@@ -22,3 +22,36 @@ Negative results are the most valuable entries. A page that only records wins le
 person repeat every failure.
 
 ## Findings
+
+### 2026-11-25 — Feature frequencies of the placeholder configuration (simulated)
+
+- **What:** 1,000,000 paid spins of `placeholder-untuned-0` through the features and `spin`
+  (DR-012), at bet level 1, master seed `31fd6640eb7e734a` (text seed
+  `feature-rates-2026-11-25`). The evaluator was a stub that pays nothing and counts Flyers
+  for real, so this measures how often the features fire, not RTP. Script in
+  `.scratch/feature-rates/` (not committed).
+- **Simulated counts:** trick attempts 463,316 (1 in 2.2 spins); landed 231,552, bailed
+  231,764; tiers easy 278,057, medium 138,535, hard 46,724 (the configured 6 : 3 : 1).
+  Scar Card fills 46,321; a filling bail held back by Flyers on the same spin 155. Sessions
+  53,605 (1 in 18.7): 46,321 from the card, 7,284 from Flyers (0.73% of spins). Endings
+  53,220 pain-limit, 385 spins-out; 330,880 free spins, 6.2 per Session.
+- **Checks against expectation:** the land share, 50.0%, matches the weighted tier odds
+  (0.6·0.6 + 0.3·0.4 + 0.1·0.2 = 0.50); fills equal bails ÷ 5 less those held back.
+- **What it means:** the placeholder fires features far too often for DR-006 (a trick about 1
+  in 8–12 spins, a Session about 1 in 150). The Kicker density on reels 2–4 and the card size
+  are the levers; the tuning work must cut both. Nearly every Session ends at pain 3 because
+  the placeholder ladder's bail odds are high from rung 2 up.
+
+### 2026-11-25 — Whole-game return of the placeholder configuration (simulated)
+
+- **What:** 1,000,000 paid spins of `placeholder-untuned-0` through `spin` with the real
+  evaluator (PR #2), at bet level 1, master seed `167dd6868380947e` (text seed
+  `feature-rtp-2026-11-25`), the Scar Card carried from spin to spin. Script in
+  `.scratch/feature-rates/` (not committed).
+- **Simulated:** return 72.97% of the amount bet (SE 0.30 pp, from the sample SD of 2.96×
+  bet per spin), of which base game and landed tricks 55.01% and Sessions 17.96%. No spin
+  reached the 2,500× cap.
+- **What it means:** the untuned placeholder pays well under DR-006's 96% while firing its
+  features far too often (the entry above), so its pays are low and its features cheap.
+  No theoretical figure exists yet to compare with; the analyser provides that. This is a
+  wiring check and a baseline for tuning, not a number to quote.

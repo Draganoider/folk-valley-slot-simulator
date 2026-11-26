@@ -312,3 +312,34 @@ replaced it.
   with new golden vectors, and results record which version made them. A change to the
   result's shape is a new `RESULT_FORMAT_VERSION`, and presentation must handle it. Bet levels
   are part of the configuration, because each has its own Scar Card.
+
+### DR-012 — The draw order after the stops, and Flyers before a filling Scar Card
+
+- **Status:** accepted, 2026-11-25
+- **Context:** DR-011 fixed how each paid spin's two streams are derived but left the order
+  of the draws after the reel stops to the features work. That order is part of what a seed
+  replays, so changing it later breaks every recorded seed. DR-005 also lets a spin start a
+  Session from 3+ Flyers or from a full Scar Card, and a spin with a Kicker bail and three
+  Flyers can do both, while a paid spin starts at most one Session (no retriggers).
+- **Decision:**
+  - **Outcome stream, in order:** the base stops (one draw per reel, reel 1 first); if a
+    Kicker shows, the rider, the tier, land or bail, then on a landing one draw per extra
+    wild reel; if a Session starts, its rider, then for each free spin its stops and its land
+    or bail. **Cosmetic stream, in order:** the base trick id, then on a bail its animation
+    and injury id; for each free spin its trick id, then on a bail its animation and injury
+    id; then the Session's closing card. The full list is in
+    [`src/engine/README.md`](../src/engine/README.md), and a golden full-spin test pins it.
+  - **Flyers win, and the card holds its last mark.** When the bail that would fill the card
+    comes on a spin with 3+ Flyers, the Session starts from the Flyers (with their start rung)
+    and the card does not take that mark: it stays one short of full, and the next bail fills
+    it. The card's Session is postponed, never lost.
+- **Alternatives:** Filling and resetting the card anyway, rejected: the player's card would
+  be spent on a Session they were getting regardless. A pending "full" card that triggers on
+  the next spin, rejected: it adds a state the card cannot otherwise be in and a Session on a
+  spin that showed nothing. Choosing the trigger with the higher start rung, rejected as
+  harder to state for no gain at the placeholder's rungs. Drawing all cosmetics before the
+  outcomes, rejected: the streams are separate, so the order across them does not matter,
+  and drawing cosmetics as each event happens reads like the result.
+- **Consequences:** The Scar Card's Markov chain has one extra transition: at size − 1, a bail
+  with 3+ Flyers stays at size − 1. The analyser models that, and its split credits the
+  Session to Flyers. Any change to the order is a new decision and new golden values.

@@ -8,8 +8,8 @@ Update it when work lands on `test`.
 
 ## Milestones
 
-Milestone 0 (repository, CI and docs skeleton) is done, and milestone 1 (game design
-research) is closing. See [`PLAN.md`](PLAN.md) for what
+Milestone 0 (repository, CI and docs skeleton) is done, milestone 1 (game design
+research) is done apart from its release, and milestone 2 (engine and simulation) is starting. See [`PLAN.md`](PLAN.md) for what
 each milestone means.
 
 ## Landed so far
@@ -22,8 +22,8 @@ each milestone means.
 
 ## Not done yet
 
-- Milestone 1: the research is done and decision records DR-005 to DR-008 are accepted.
-  Still open: the CI time budget for the analyser, and the remaining owner questions on each
-  research page (in [`research/`](research/)). Closing it releases `0.1.0`.
+- Milestone 1: research done and DR-005 to DR-010 accepted. The `0.1.0` release is
+  deferred by the owner.
+- Milestone 2, the engine and simulation, is starting.
 
 ## Groundwork beside the milestones

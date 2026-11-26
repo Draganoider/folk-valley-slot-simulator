@@ -253,3 +253,27 @@ replaced it.
   The game and its README carry a content note about realistic injuries. Some assets come
   from a second model with its own license, recorded per file. Revisit if playtests show the
   broken level stops reading as funny.
+
+### DR-010 — Milestone 1's open questions, settled
+
+- **Status:** accepted, 2026-11-25
+- **Context:** The research pages ended with questions for the owner. These are the answers,
+  so the engine work in milestone 2 starts from settled ground.
+- **Decision:**
+  - **Exact RTP analysis runs nightly and on demand,** not on every push. Pushes run the unit
+    tests, including the small exact fixtures and short seeded simulations; the full
+    enumeration, the Markov and DP analysis and the long simulations run in a scheduled job.
+  - **The Scar Card is saved in the browser** with the virtual balance, so a reload keeps it.
+  - **Bails pay nothing.** A bail adds a Scar Card mark and nothing else.
+  - **No player choices change expected value.** There is no bank-or-push decision and no
+    choice of line in the first version.
+  - **One configuration** at every bet level, as DR-006 says.
+  - **The patch-up card may show a friend filming the bail on a phone.** It is the Folk Valley
+    joke. The friend is an original adult character, and the phone shows no real app or brand.
+  - **The four riders stay as designed** (DR-008); none is based on a real person. Gramps
+    stays mid-50s, and his master sheet is regenerated to look it.
+  - **Prompt records live in `docs/art/prompts/`.** Each generated asset's license wording
+    follows its model's terms.
+- **Alternatives:** Each research page lists the alternatives for its question.
+- **Consequences:** CI gets a scheduled workflow for the analysis in milestone 2. The engine's
+  state for a player is the Scar Card per bet level, saved beside the balance.

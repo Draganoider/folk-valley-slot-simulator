@@ -8,9 +8,9 @@ Update it when work lands on `test`.
 
 ## Milestones
 
-Milestone 0 (repository, CI and docs skeleton) is done, milestone 1 (game design
-research) is done apart from its release, and milestone 2 (engine and simulation) is starting. See [`PLAN.md`](PLAN.md) for what
-each milestone means.
+Milestone 0 (repository, CI and docs skeleton) is done. Milestone 1 (game design research)
+is done apart from its release. Milestone 2 (engine and simulation) is code-complete on
+`test`. See [`PLAN.md`](PLAN.md) for what each milestone means.
 
 ## Landed so far
 
@@ -19,24 +19,24 @@ each milestone means.
 - Milestone 0: hygiene CI green on `test` and `main`.
 - Milestone 1 research: mechanics, math targets, rendering and art direction, in
   [`research/`](research/), with decision records DR-005 to DR-010.
-- Milestone 2 engine foundation: the TypeScript and Vitest scaffold, the seeded RNG with
-  golden vectors, the configuration types and validator, the injury catalogue, an untuned
-  placeholder configuration, the spin result format, and the `Engine` CI workflow running
-  typecheck and unit tests (DR-011). See [`src/engine/README.md`](../src/engine/README.md).
-
-- Milestone 2 so far: the engine foundation (PR #1, DR-011), the 243-ways evaluator (PR #2),
-  the trick feature, Scar Card, Session and the full `spin()` (PR #3, DR-012), and the
-  simulation runner, statistics, workers and `npm run simulate` CLI (PR #4). The placeholder
-  configuration is untuned: it simulates about 73% RTP and fires features far too often
-  (see [`findings.md`](findings.md)).
+- Milestone 2, the engine (see [`src/engine/README.md`](../src/engine/README.md)):
+  - the foundation: scaffold, seeded RNG, configuration and validator, injury catalogue,
+    result format and the `Engine` CI workflow (PR #1, DR-011);
+  - the 243-ways evaluator (PR #2);
+  - the trick feature, Scar Card, Session and the full `spin()` (PR #3, DR-012);
+  - the simulation runner, statistics, workers and `npm run simulate` (PR #4);
+  - the exact analyser, the tuned configuration `folk-valley-96-v1` at a theoretical
+    95.997% RTP meeting every DR-006 target, engine-against-analyser tests,
+    `npm run verify:long` and a nightly workflow (PR #5, DR-013). A 10⁸-spin seeded run
+    agrees with the analyser (see [`findings.md`](findings.md)).
 
 ## Not done yet
 
-- Milestone 1: research done and DR-005 to DR-010 accepted. The `0.1.0` release is
-  deferred by the owner.
-- Milestone 2, the engine and simulation, is under way. Still to build on the foundation:
-  the base-game ways evaluator, the trick and Session features with `spin()`, the Web Worker
-  simulation, the exact analyser with a tuned configuration, and the nightly analysis
-  workflow (DR-010). The seams are listed in [`src/engine/README.md`](../src/engine/README.md).
+- Milestone 1's `0.1.0` release, deferred by the owner.
+- Milestone 2: the nightly workflow runs only once it reaches `main`, because GitHub
+  schedules workflows from the default branch alone. Moving `main` is the owner's call.
+- Open from DR-013: the 2,500× cap is effectively unreachable (about 10⁻¹⁶ per spin).
+  Whether a reachable top prize matters is the owner's call.
+- Milestone 3: the playable prototype.
 
 ## Groundwork beside the milestones

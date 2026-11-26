@@ -440,3 +440,32 @@ replaced it.
 - **Consequences:** The renderer draws an event as a function of time within it. Adding a
   beat means a new kind, a new format version, the README's table and the tests' expected
   order together.
+
+### DR-015 — Riders move as cut-out rigs; painted held frames carry the beats after the cut
+
+- **Status:** accepted, 2026-11-26; settles DR-007's spike
+- **Context:** DR-007 chose cut-out rigs, with key-pose flipbooks as the fallback, and asked a
+  milestone 3 spike to settle it. The spike built both for Kerb, an ollie and a bail
+  ([`research/animation-spike.md`](research/animation-spike.md), [`findings.md`](findings.md)).
+  The rig moved smoothly and fit in 74 KB but looked like a puppet in sprawled poses; the
+  flipbook looked like the painting but jumped between poses, drifted between frames and cost
+  652 KB for 8 frames. The owner compared the recordings and chose the hybrid.
+- **Decision:** The rig animates everything that moves: the ride-in, every trick and every
+  bail up to the cut-away on impact, as JSON clips on the in-repo runtime. Painted **held
+  frames** take over after the cut: the bail aftermath, the `broken` card and the patch-up
+  card are single generated images edited from the rider's master sheet, shown still with only
+  a camera move. The cut-away is the seam, so the switch is never seen. Rig parts follow the
+  spike's rules (joint caps painted in whatever covers the joint, separate feet, near and far
+  limbs, sleeve swaps, two or three head expressions, a scale pass against the master sheet),
+  and a small pose editor is milestone 4 tooling. Flipbook frames are not used for motion.
+- **Alternatives:** The rig alone, rejected because its worst poses are the ones the player
+  looks at longest. Flipbooks for everything, rejected for drift, ghosting and about forty
+  times the size. A flipbook only for trick peaks, rejected because the switch would show
+  mid-motion.
+- **Consequences:** Adding a trick costs a clip, not new art. Each rider needs a master sheet,
+  two or three part sheets and a handful of held frames per injury level and gore setting.
+  The presentation timeline gains a held-frame beat after the cut. Codex accepted all four
+  `broken` prompts but drew no bent limb or bone, so the `broken` held frames are made by
+  inpainting Codex's image through ComfyUI on degenerator (DR-009's fallback), under the
+  owner's own gate client. Revisit with Spine-style mesh deformation (DR-007's upgrade path)
+  if playtests say the rig reads as paper.

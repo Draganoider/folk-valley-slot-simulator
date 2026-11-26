@@ -37,6 +37,9 @@ is done apart from its release. Milestone 2 (engine and simulation) is code-comp
   schedules workflows from the default branch alone. Moving `main` is the owner's call.
 - Open from DR-013: the 2,500× cap is effectively unreachable (about 10⁻¹⁶ per spin).
   Whether a reachable top prize matters is the owner's call.
-- Milestone 3: the playable prototype.
+- Milestone 3, the playable prototype, under way. Landed: the presentation timeline and its
+  player (PR #6, DR-014), the app shell with the placeholder reel scene and browser tests in CI
+  (PR #7), and the animation spike (PR #8, settled as DR-015). Still to do: driving the scene
+  from the timeline, the statistics panel, and the `broken`-level ComfyUI trial.
 
 ## Groundwork beside the milestones

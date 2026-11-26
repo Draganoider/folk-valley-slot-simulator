@@ -1,0 +1,40 @@
+name: Engine
+
+# Typecheck and unit tests for the TypeScript code: the engine's RNG golden vectors,
+# configuration validation and, as they land, payouts, fixtures and short seeded
+# simulations. The full exact analysis and long simulations run in a separate nightly
+# workflow (DR-010), not here, so this job stays fast.
+#
+# The job's name, "Typecheck and unit tests", may become a required status check on test;
+# renaming it would then make every pull request wait for a check that never arrives.
+
+on:
+  pull_request:
+    branches: [test, main]
+  push:
+    branches: [test, main]
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Typecheck and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install the locked dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        if: ${{ !cancelled() }}
+        run: npm test

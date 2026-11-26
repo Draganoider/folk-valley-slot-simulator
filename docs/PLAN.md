@@ -277,3 +277,38 @@ replaced it.
 - **Alternatives:** Each research page lists the alternatives for its question.
 - **Consequences:** CI gets a scheduled workflow for the analysis in milestone 2. The engine's
   state for a player is the Scar Card per bet level, saved beside the balance.
+
+### DR-011 — Integer coins, a versioned per-spin seed derivation, and a versioned result format
+
+- **Status:** accepted, 2026-11-25
+- **Context:** Milestone 2's foundation fixes three things that are costly to change once
+  parallel work builds on them: how amounts are counted, how a spin's random numbers are
+  derived from a seed, and the shape of the spin result. Changing either of the last two
+  after results are recorded breaks every recorded seed and every replay. The detail is in
+  [`src/engine/README.md`](../src/engine/README.md).
+- **Decision:**
+  - **Amounts are integer coins.** A paid spin costs `bet.coinsPerSpin` coins (20 in the
+    placeholder); ways pays are coins per way; the bet level is credits per coin. Every win
+    is pay × ways × multiplier in integers, so the analyser can be exact, and RTP is the same
+    at every bet level by construction.
+  - **Seed derivation `xoshiro128ss-v1`.** A 64-bit master seed in 16 hex digits. Spin *i*'s
+    seed is the (*i*+1)-th SplitMix64 output from the master seed. Each spin has an outcome
+    and a cosmetic stream, seeded by the spin seed XOR a fixed tag, with the `xoshiro128**`
+    state taken from the first two SplitMix64 outputs of that seed. Text seeds are FNV-1a 64
+    plus SplitMix64's mix (`fnv1a64-splitmix-v1`). Golden vectors pin all of it.
+  - **Result format version 1.** `SpinResult` is plain data recording the stops, every win,
+    every attempt with its rider, tier, outcome and injury level and id, the Scar Card before
+    and after, and the whole Session. It is the presentation's only input.
+  - **Configuration is validated whole and never repaired.** The validator takes `unknown`,
+    reports every problem with its path, and refuses rather than clamps. Injury ids must come
+    from one reviewed catalogue in the engine, which carries rule 8 into code.
+- **Alternatives:** Fractional pays in multiples of the bet, rejected because the analyser
+  would then work in floats and "exact" would need an error bound. BigInt for the 64-bit
+  seeding, rejected for speed in million-spin runs; the 32-bit-limb arithmetic is checked
+  against BigInt in the tests. A counter-based generator per draw, rejected as unneeded: one
+  derived stream per spin already lets any spin replay alone. Configuration as JSON files
+  only, deferred: the types allow it, and validation already treats input as `unknown`.
+- **Consequences:** Any change to the generator, seeding or derivation is a new RNG version
+  with new golden vectors, and results record which version made them. A change to the
+  result's shape is a new `RESULT_FORMAT_VERSION`, and presentation must handle it. Bet levels
+  are part of the configuration, because each has its own Scar Card.

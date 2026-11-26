@@ -8,6 +8,11 @@ While the version stays `0.x`, anything may change in any release.
 
 ## [Unreleased]
 
+### Added
+- The engine foundation: a seeded `xoshiro128**` RNG with one stream per paid spin, the
+  game configuration with its validator, an untuned placeholder configuration, and the spin
+  result format, with unit tests and an `Engine` CI workflow.
+
 ## [0.0.0] - 2026-10-18
 
 ### Added

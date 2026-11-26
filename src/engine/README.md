@@ -21,14 +21,18 @@ Import from [`index.ts`](index.ts); everything outside this folder should.
 | [`config.ts`](config.ts) | The configuration types and constants: riders, disciplines, trick tiers, injury levels, units | Done |
 | [`validate.ts`](validate.ts) | `validateConfig`, which takes `unknown` and reports every problem with its path; `assertValidConfig` | Done |
 | [`injuries.ts`](injuries.ts) | `INJURY_CATALOGUE`, every injury id by level, the list reviewed against rule 8 | Done |
-| [`placeholder-config.ts`](placeholder-config.ts) | A complete configuration that validates. **Untuned**: its numbers are guesses | Replaced when the analyser tunes it |
+| [`folk-valley-config.ts`](folk-valley-config.ts) | `FOLK_VALLEY_CONFIG`, `folk-valley-96-v1`: the shipped configuration, tuned to DR-006 (DR-013) | Done |
+| [`placeholder-config.ts`](placeholder-config.ts) | The untuned placeholder, kept only as a test fixture: the golden draw-order tests pin its strips | Fixture |
 | [`result.ts`](result.ts) | The spin result format, presentation's only input | Done, format version 1 |
 | [`state.ts`](state.ts) | `PlayerState`, the Scar Card marks per bet level, the only state between paid spins; `nextScarCard`, the card after a spin | Done |
 | [`grid.ts`](grid.ts) | Drawing reel stops and reading the visible grid | Done |
 | [`evaluate.ts`](evaluate.ts) | `evaluateWays` (243 ways), `countFlyers`, and the profile form the analyser enumerates with | Done |
 | [`features.ts`](features.ts) | `resolveBaseTrick` and `resolveSession`; `WinEvaluator`, the seam tests stub | Done |
-| [`spin.ts`](spin.ts) | `spin(config, state, request, evaluator?)`, which wires the rest together | Done |
-| [`analyser.ts`](analyser.ts) | `analyse(config)`, every theoretical figure | Seam: TODO for the analyser |
+| [`spin.ts`](spin.ts) | `spin(config, state, request, evaluator?)`, which wires the rest together; `spinWithStreams`, the same with its streams given, for the exact toy test | Done |
+| [`analyser.ts`](analyser.ts) | `analyse(config)`, every theoretical figure, as a `TheoreticalReport` | Done |
+| [`analyse-base.ts`](analyse-base.ts) | The base game's exact distribution: `reelSweep` (a dynamic programme over reels) and `bruteForceBase` (every combination), which must agree | Done |
+| [`analyse-session.ts`](analyse-session.ts) | The Session's ladder chain: exact moments, and the distribution truncated at the cap | Done |
+| [`rational.ts`](rational.ts) | Exact BigInt rationals for the figures the analyser keeps exact | Done |
 | [`stats.ts`](stats.ts) | Streaming, exactly mergeable statistics over spin results, and the observed summary | Done |
 | [`simulate.ts`](simulate.ts) | The simulation runner over an injected spin function, lanes, `splitJob` and `mergeOutcomes` | Done |
 | [`verify.ts`](verify.ts) | The DR-006 tolerance check (observed within 4·σ/√N of theoretical) and the seed-sweep check | Done |
@@ -77,6 +81,11 @@ JSON round trip:
   `broken`; every sequence closes `patched-up`. The gore setting is presentation-only and is
   not configuration;
 - the cosmetic catalogue, and the max-win cap of 2,500× the cost of a spin.
+
+The shipped configuration is `FOLK_VALLEY_CONFIG` in
+[`folk-valley-config.ts`](folk-valley-config.ts), `folk-valley-96-v1` (DR-013); its header
+lists the analyser's figures. `PLACEHOLDER_CONFIG` stays only as a fixture for the tests that
+pin its strips.
 
 `validateConfig` refuses, with a path and a reason, anything that breaks those rules: wrong
 counts, unknown symbols, a Kicker on reel 1 or 5, two Flyers in one window, fractional pays
@@ -154,7 +163,8 @@ Two forms of the same rules:
 
 Speed, measured on one development machine with Node 24: about 0.35 µs per `evaluateWays` call on the
 placeholder strips, and about 40 ns per combination in the profile form (the placeholder's
-30.5 million distinct-window combinations take about 1.3 s).
+30.5 million distinct-window combinations take about 1.3 s). The analyser's `reelSweep`
+covers the same combinations reel by reel in about 40 ms.
 
 ## A paid spin
 
@@ -222,6 +232,79 @@ anyway. `nextScarCard` in [`state.ts`](state.ts) is the rule.
 defaulting to [`evaluate.ts`](evaluate.ts). The feature tests inject a stub with
 hand-checkable pays, so they test the features alone; the golden spin uses the stub too, so
 it pins the draws, not the pays.
+
+## The analyser
+
+[`analyser.ts`](analyser.ts) computes every theoretical figure from the configuration alone
+(DR-006, [`math-targets.md`](../../docs/research/math-targets.md) section 5); nothing in it
+samples. `analyse(config)` takes about four seconds on the shipped configuration and returns
+a `TheoreticalReport`, every figure labelled `kind: 'theoretical'`, so `withTheoretical` and
+`checkTolerance` take it directly (rule 6). `npm run analyse` prints it as JSON.
+
+**Base game** ([`analyse-base.ts`](analyse-base.ts)). The stops are independent and
+uniform, so a combination of windows has probability Π stops ÷ Π strip lengths, an integer
+weight. 243 ways factorise by symbol: a symbol's run is alive while every reel so far shows
+it or a wild, its ways are the product of the counts, and it pays when the run ends at
+length 3 or more. `reelSweep` walks the reels with that as its state (accumulated coins,
+each live symbol's ways, Flyers so far, the leftmost Kicker reel), merging equal states, so
+the shipped base game takes about 40 ms instead of a minute and a half. `bruteForceBase`
+walks every combination of distinct windows through `waysCoins`, the method math-targets
+describes; the tests compare the two on small strips and the nightly job on the shipped
+ones, cell by cell. Both use the evaluator's own `profileWindow`, `wildReelProfile` and pays.
+The sweep runs once with no wild reels and once per set of reels a landing can turn wild.
+
+**Trick.** A Kicker on the grid as stopped starts an attempt from the leftmost one. Each tier
+has an integer weight and land and bail weights; on a landing the Kicker's reel and
+`extraWildReels` others (each set of others equally likely, since the engine picks without
+replacement) turn wild and the tier's multiplier applies. The analyser takes each tier,
+Kicker reel and wild set with its exact probability and the matching sweep. A bail pays the
+plain ways win and adds a mark.
+
+**Session** ([`analyse-session.ts`](analyse-session.ts)). A free spin's coins W come from the
+Session strips with no wild reels, independent of the attempt, so a Session pays S = Σ mᵢWᵢ,
+where mᵢ is the multiplier after the i-th attempt, a Markov chain over (rung, pain, spins
+left). Its exact moments come from a backward pass in rationals: E[S] = E[W]·E[Σm] and
+E[S²] = Var(W)·E[Σm²] + E[W]²·E[(Σm)²]. Its distribution comes from a backward dynamic
+programme over the same states, in whole coins up to the cap with everything past it in one
+cell. A paid spin then pays min(base + S, cap), which is exactly what `spin` pays, since the
+Session stops at what is left under the cap.
+
+**Scar Card.** A chain over the marks 0 … size − 1: a bail moves up one, and at size − 1 a
+bail fills the card (a Session, back to 0) unless the spin shows 3+ Flyers, when the card holds
+(DR-012). With b = P(bail) and b_F = P(bail with 3+ Flyers), equal flow round the cycle gives
+π_s ∝ 1/b below the top and π_top ∝ 1/(b − b_F). Every theoretical figure is the long-run one
+under π. A spin's payout depends on the card only at size − 1, so its distribution is a
+mixture of two. The chain is the same at every bet level, because amounts are coins (DR-011).
+
+**Exact and float.** Uncapped figures are exact BigInt fractions: the RTP and its split, the
+second moment, the trick and Session rates and π (`report.exact` carries them). Everything
+that needs the distribution or the cap (the capped RTP and σ, the hit, win-above-bet and LDW
+rates, the cap probability and the histogram) is float64 over the truncated distribution.
+Those are sums of products of non-negative numbers, so with n roundings on the longest path
+the relative error is at most n·2⁻⁵³ (`report.floatError.relative`, about 10⁻¹⁰); σ, a
+difference of moments, has its own absolute bound. Every run checks the float Session mean
+against the exact one.
+
+**Two σ.** `sigma` is the SD of one paid spin's payout under π, the volatility DR-006 sets.
+`sigmaLongRun` is √(lim Var(ΣX)/N) over consecutive spins, from the card chain's fundamental
+matrix: the card spaces its Sessions more evenly than chance would, so a long run varies less
+than N independent spins. Tolerances on consecutive spins may use either; `sigma` is looser.
+
+**Two splits.** `rtpSplit` follows the statistics (`summarise`): base ways on spins whose trick
+did not land, every base win on spins whose trick landed, and Sessions by cause.
+`rtpSplitByUplift` is the one DR-006 tunes to (math-targets section 3): the plain ways win of
+every grid as the base game, only what a landing adds as the trick, and the Sessions.
+
+**Verification** (math-targets 6.2). [`tests/engine/analyser.test.ts`](../../tests/engine/analyser.test.ts):
+the sweep against brute force; a toy configuration (four reels of one row) whose every paid
+spin is walked through the real `spinWithStreams` with a scripted outcome stream and its exact
+probability, matching the analyser's fractions exactly and its float figures within the bound,
+with the cap binding and DR-012's held mark reachable; and the shipped figures, pinned.
+[`tests/engine/engine-vs-analyser.test.ts`](../../tests/engine/engine-vs-analyser.test.ts):
+hand-picked and seeded spins whose coins equal the analyser's evaluation of the same stops
+(`sweepCellOfGrid`), and short seeded runs of the base game, the Session and the whole game
+within 4·σ/√N. The long forms run nightly with `npm run verify:long`, described in
+[`src/worker/`](../worker/README.md).
 
 ## Simulation and statistics
 

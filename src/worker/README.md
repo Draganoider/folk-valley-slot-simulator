@@ -20,6 +20,8 @@ Only the transport and the way a host yields between batches differ.
 | [`node/thread.ts`](node/thread.ts) | The Node `worker_threads` entry, the same `serveSimulations` |
 | [`node/pool.ts`](node/pool.ts) | `createNodeWorker()`, a worker thread as a `WorkerHandle` |
 | [`node/cli.ts`](node/cli.ts) | `npm run simulate`, the CLI |
+| [`node/analyse.ts`](node/analyse.ts) | `npm run analyse`, the analyser's theoretical report as JSON |
+| [`node/verify-long.ts`](node/verify-long.ts) | `npm run verify:long`, the nightly analysis and long verification |
 
 ## Exactly the same result on any number of workers
 
@@ -48,7 +50,7 @@ npm run simulate -- --spins 10000000 --seed-text nightly-2026-11-25 --out .scrat
 | `--start N` | First spin index | 0 |
 | `--bet L` | Bet level | the lowest |
 | `--lane N` or `none` | The Scar Card resets every N spins; `none` is one lane, one thread | 1,000,000 |
-| `--config FILE` | A configuration JSON, checked by `assertValidConfig` | the placeholder |
+| `--config FILE` | A configuration JSON, checked by `assertValidConfig` | the shipped one, `folk-valley-96-v1` |
 | `--workers N` | Worker threads. Never changes the result | CPUs − 1 |
 | `--batch N` | Spins between progress reports and cancel checks | 5,000 |
 | `--out FILE` | Where the JSON goes | stdout |
@@ -61,7 +63,31 @@ observed summary with every raw count. Every figure is labelled observed; theore
 values come only from the analyser. Ctrl+C cancels and still writes what was played, with
 exit code 130.
 
-Until the real `spin()` lands the CLI exits 1 with its "not implemented" error.
+
+## `npm run verify:long`: the nightly job
+
+```text
+npm run verify:long -- --out .scratch/verify-long
+```
+
+What the nightly workflow (`.github/workflows/nightly.yml`, DR-010) runs, against the
+analyser's theoretical values:
+
+1. `analysis.json`, the analyser's report.
+2. The base game by brute force over every combination of distinct windows (about 1.5·10⁹
+   on the shipped strips), plain and with each set of reels a landing can turn wild,
+   compared cell by cell with the analyser's reel sweep.
+3. The base game alone (10⁷ grids) and the Session alone (10⁶ forced 3-Flyer Sessions),
+   seeded, each within 4·σ/√N of the analyser's figure.
+4. The whole game as a seed sweep: 20 seeds from the recorded base `long-run-2026-11-25`,
+   5·10⁶ paid spins each on worker threads (10⁸ in all), lanes of 10⁶. Each seed's RTP and
+   the pooled RTP, hit, win-above-bet, LDW, trick and Session rates are within 4·σ/√N, with
+   σ for consecutive spins (`sigmaLongRun`), and the z-scores pass `checkSeedSweep`.
+
+It writes `analysis.json` and `verification.json` and exits 1 if any check fails. Options:
+`--seeds`, `--spins` (per seed), `--base`, `--sessions`, `--workers`, `--config` and
+`--no-brute`. The seeds are fixed, so a run is reproducible; a failing seed is a finding, not
+a reason to change it.
 
 ## How the tests run workers
 

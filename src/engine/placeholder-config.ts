@@ -2,14 +2,13 @@ import type { GameConfig, ReelStrip } from './config';
 import { INJURY_CATALOGUE } from './injuries';
 
 /**
- * A placeholder configuration with the whole shape DR-005 describes, so the engine, the
- * analyser and the tests have something valid to run on.
+ * The untuned placeholder configuration, kept as a test fixture only.
  *
- * THE NUMBERS ARE UNTUNED. Strips, pays, weights, ladder multipliers and land odds are
- * plausible guesses that pass validation and nothing more; nobody has computed this
- * configuration's RTP, volatility or trigger rates. The analyser tunes them to DR-006's
- * targets (96.0% RTP, σ 4–7× bet, hit rate 28–35%, Session about 1 in 150 paid spins, a trick
- * about 1 in 8–12) and replaces this file. Quote no figure from it.
+ * THE NUMBERS ARE UNTUNED and nothing ships with them: the game uses `FOLK_VALLEY_CONFIG`
+ * (folk-valley-config.ts, DR-013). The placeholder stays because the golden draw-order and
+ * feature tests pin its strips, and changing them would change those pinned values without
+ * testing anything new. Its theoretical RTP is 73.2% (docs/findings.md). Quote no figure
+ * from it as the game's.
  */
 
 const CODES: { readonly [code: string]: string } = {

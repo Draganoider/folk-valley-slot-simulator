@@ -343,3 +343,66 @@ replaced it.
 - **Consequences:** The Scar Card's Markov chain has one extra transition: at size − 1, a bail
   with 3+ Flyers stays at size − 1. The analyser models that, and its split credits the
   Session to Flyers. Any change to the order is a new decision and new golden values.
+
+### DR-013 — The tuned configuration `folk-valley-96-v1`, and how its figures are computed
+
+- **Status:** accepted, 2026-11-25
+- **Context:** DR-006 set the math targets and asked for an analyser that proves them, and
+  the placeholder configuration simulated about 73% RTP with features far too frequent
+  ([`findings.md`](findings.md)). Milestone 2 needs one real configuration whose every
+  theoretical figure is computed, and an analyser fast and exact enough to tune with. Once
+  the game ships, its numbers are what every recorded seed, finding and statistics panel
+  refers to, so changing them later is costly.
+- **Decision:**
+  - **The configuration** is `FOLK_VALLEY_CONFIG`, id `folk-valley-96-v1`, in
+    [`src/engine/folk-valley-config.ts`](../src/engine/folk-valley-config.ts). Same symbols,
+    rules and units as the placeholder; only numbers changed. A spin costs 20 coins. Base
+    strips of 52, 83, 82, 83 and 52 stops with one Kicker on each of reels 2–4 and seven
+    Flyers; separate Session strips of 51–53 stops, richer in riders and gear, with two
+    Kickers on each of reels 2–4 and no Flyers. Ways pays from 11–12 coins per way (low,
+    3 of a kind) to 900 (Gramps, 5). Trick tiers easy, medium, hard weighted 6 : 3 : 1, landing
+    36%, 26% and 6%: easy turns the Kicker's reel wild, medium does that at 2×, and hard turns
+    one more reel wild. A Scar Card of 14 marks. Sessions start with 12 free spins on a six-rung
+    ladder at 1, 2, 3, 4, 6 and 8×, landing from 73.9% at the bottom to 59.3% at the top, one
+    spin added per bail before pain 3, starting one rung up per Flyer past three.
+  - **Its theoretical figures** (the analyser's, under the Scar Card's stationary
+    distribution): RTP 95.997% with the cap (DR-006: 96.0% ± 0.05 pp); split base game 55.5,
+    trick uplift 13.2, Session 27.3 points; σ 5.72× bet per paid spin; hit frequency 31.2%,
+    win above bet 17.2%, LDW 14.0%; a trick 1 in 9.5 paid spins (30% land); a Session 1 in
+    141 (1 in 191 from the card, 1 in 543 from Flyers), averaging 38.5× bet. Every DR-006
+    target is met. The full report is in [`findings.md`](findings.md).
+  - **The split DR-006 tunes to counts only the trick's uplift**: the plain ways win of every
+    grid is the base game, and what a landing adds (its wild reels and multiplier) is the
+    trick, as math-targets section 3 says. The statistics' split, which counts the whole win
+    of a landed spin as the trick's, is reported beside it (18.2 points for the trick).
+  - **How the analyser computes it** ([`src/engine/README.md`](../src/engine/README.md#the-analyser)):
+    the base game by a dynamic programme over reels, checked cell by cell against brute force
+    over every combination of distinct windows; the trick per tier, Kicker reel and wild set;
+    the Session as a Markov chain over (rung, pain, spins left), with exact moments in
+    rationals and its distribution in whole coins truncated at the cap; the Scar Card as a
+    chain with DR-012's held mark. Uncapped figures are exact fractions; the capped and
+    distributional ones are float64 sums of non-negative products, with a stated relative
+    error bound near 10⁻¹⁰.
+  - **Long runs use σ for consecutive spins.** The card spaces its Sessions more evenly than
+    chance, so the σ of a long run of play (5.04) is below the per-spin σ (5.72). DR-006's
+    volatility class uses the per-spin σ; tolerances on consecutive spins may use the
+    long-run one, which the analyser also reports.
+  - **The nightly budget** that DR-006 left open: the full analysis, brute force over about
+    1.5·10⁹ base combinations, and 10⁸ paid spins in a 20-seed sweep, in one scheduled job
+    that is not a required check (`.github/workflows/nightly.yml`).
+- **Alternatives:** Tuning by simulation, rejected by DR-006. Brute force as the analyser,
+  rejected as too slow to tune with (two minutes per evaluation, against 40 ms for the reel
+  sweep, which gives the same cells). An FFT for the Session's convolutions, rejected because
+  its absolute rounding errors would swamp the far tail where the cap lives. A top multiplier
+  of 15×, which put σ at 8.9 and the Session at 42 points. Cards of 5 and 10 marks, which made
+  Sessions too frequent once the trick rate was right. Easy tricks landing half the time,
+  which put the trick near 15 points.
+- **Consequences:** Any change to the strips, pays or weights is a new configuration id, a
+  fresh analysis and a findings entry; the pinned figures in `tests/engine/analyser.test.ts`
+  fail until then. The placeholder stays only as a fixture for the golden draw-order tests.
+  **The cap is effectively unreachable:** a paid spin reaches 2,500× with probability about
+  10⁻¹⁶, where math-targets hoped for roughly 1 in 5–50 million. The cap still bounds the
+  variance and the stated max win, but the panel must not imply it is a realistic outcome.
+  Revisit with a heavier tail (a rare, steep top rung) if a reachable top prize matters; it
+  costs σ and needs a retune. With a 14-mark card a nearly full card is worth noticeably more
+  than an empty one, the state dependence DR-005 accepted; the panel shows the card's share.

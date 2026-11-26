@@ -55,3 +55,93 @@ person repeat every failure.
   features far too often (the entry above), so its pays are low and its features cheap.
   No theoretical figure exists yet to compare with; the analyser provides that. This is a
   wiring check and a baseline for tuning, not a number to quote.
+
+### 2026-11-25 — The placeholder's theoretical figures, against its simulations (theoretical)
+
+- **What:** the new analyser (`analyse`, analyser version `folk-valley-analyser-1`) on
+  `placeholder-untuned-0`, compared with the two simulated entries above.
+- **Theoretical:** RTP 73.229% (no spin can reach the cap, so capped and uncapped agree);
+  split as the statistics count it: base ways on spins without a landing 7.05, every base win
+  on landed spins 48.19, Sessions 2.41 from Flyers and 15.59 from the card; trick attempts
+  0.46362 per spin; Sessions 0.053454 per spin, 0.0071245 from Flyers.
+- **Against the simulations:** RTP 72.97% simulated (SE 0.30 pp, z −0.86); base ways plus
+  landed tricks 55.01 simulated against 55.23; Sessions 17.96 against 18.00; Session rate
+  0.053605 against 0.053454 (z 0.67); Flyer Sessions 0.007284 against 0.0071245 (z 1.9).
+  All within 4 standard errors.
+- **What it means:** the analyser and the engine describe the same game, from two directions
+  that share only the evaluator, before any tuning began.
+
+### 2026-11-25 — The analyser's speed (one development machine, Node 24)
+
+- **Base game:** the reel sweep (`reelSweep`) takes about 40 ms on the placeholder (952 cells)
+  and on the shipped strips (2,890 cells), against 2.4 s and 126 s for brute force over every
+  combination of distinct windows (3.1·10⁷ and 1.5·10⁹). The two agree cell for cell on both,
+  plain and with every wild set.
+- **Session:** the truncated distribution over 36 ladder states with 887 distinct free-spin
+  values, up to the 50,000-coin cap, takes about 3 s; a whole `analyse` of the shipped
+  configuration about 3.5–4 s. That made tuning by repeated exact analysis practical.
+- **The float bound:** every distributional figure's relative error is at most 9.3·10⁻¹¹;
+  the float Session mean matches the exact rational one to 3·10⁻¹⁴.
+
+### 2026-11-25 — `folk-valley-96-v1`, the tuned configuration (theoretical)
+
+- **What:** `FOLK_VALLEY_CONFIG` (DR-013), analysed exactly. Every figure here is theoretical:
+  computed by the analyser over the Scar Card's stationary distribution, never simulated.
+- **RTP:** 95.99728% with the 2,500× cap; the uncapped value is the exact fraction in the
+  report and differs by 9·10⁻¹⁵. DR-006 asks for 96.0% ± 0.05 pp.
+- **Split, as DR-006 counts it** (the trick is only what a landing adds): base game 55.48,
+  trick 13.19, Session 27.33 points. **As the statistics count it:** base ways 50.44, landed
+  spins 18.23, Sessions 7.11 from Flyers and 20.22 from the card.
+- **Volatility:** σ 5.715× bet per paid spin; σ over consecutive spins 5.044 (the card makes
+  its Sessions more regular than chance). Hit frequency 31.16%, win above bet 17.19%, LDW
+  13.97% (under half of all hits), even money never (no combination pays exactly 20 coins).
+- **Features:** a trick 1 in 9.53 paid spins (easy 6.30%, medium 3.15%, hard 1.05% of spins),
+  landing 30% overall (36%, 26%, 6%). A Session 1 in 141.1: 1 in 191 from the card and 1 in
+  543 from Flyers (3 Flyers 0.17856%, 4 Flyers 0.00539%, 5 Flyers 0.0000636%). A 3-Flyer or
+  card Session pays 38.5× bet on average (SD 46.5), plays 8.5 spins and ends at pain 3 93.9%
+  of the time. P(bail) 7.35% per spin; the card's stationary distribution is nearly uniform,
+  0.07142 per mark below the top and 0.07148 at 13 marks.
+- **Distribution of one paid spin's payout, × bet:** 0: 68.84%; (0, 1): 13.97%; [1, 2): 8.08%;
+  [2, 5): 6.44%; [5, 10): 1.33%; [10, 20): 0.70%; [20, 50): 0.41%; [50, 100): 0.16%;
+  [100, 200): 0.059%; [200, 500): 0.0097%; [500, 1000): 2.1·10⁻⁶; [1000, 2500): 1.3·10⁻⁸;
+  the cap: 1.0·10⁻¹⁶.
+- **What would change my mind:** a nightly brute-force mismatch, or a long run outside
+  4·σ/√N.
+
+### 2026-11-25 — `folk-valley-96-v1`, long seeded runs against the analyser (simulated)
+
+- **What:** `npm run verify:long` with its defaults, on one development machine (28 threads):
+  20 seeds `long-run-2026-11-25-00` … `-19` (text seeds, `fnv1a64-splitmix-v1`), 5,000,000
+  paid spins each at bet level 1 with lanes of 10⁶, RNG `xoshiro128ss-v1`; the base game
+  alone over 10⁷ grids (`long-run-2026-11-25-base`); 10⁶ forced 3-Flyer Sessions
+  (`long-run-2026-11-25-session`). 281 s in all, 126 s of it brute force.
+- **Simulated, whole game, 10⁸ paid spins pooled:** RTP 95.9836% (theoretical 95.9973%, SE
+  0.050 pp with σ for consecutive spins, z −0.27); hit frequency 31.1542% (z −0.49); win above
+  bet 17.1856% (z −1.16); LDW 13.9686% (z 0.60); trick rate 0.104934 (z −1.22); Session rate
+  0.0070856 (z −0.33). Per seed, RTP 95.52–96.39%; the 20 z-scores have mean −0.06 and
+  variance 1.37, inside the sweep's band (mean within ±0.89, variance 0–2.30). Largest
+  observed win 1,008× bet.
+- **Simulated, components:** base game RTP 55.413% (theoretical 55.482%, z −1.61), base hit
+  frequency 30.775% (z −0.61); Session mean 38.539× bet (theoretical 38.526, z 0.29),
+  pain-limit endings 93.914% (z 0.03).
+- **Brute force:** equal to the reel sweep, cell for cell, plain and for all six wild sets.
+- **What it means:** the engine plays the game the analyser describes. The seed sweep's
+  variance of 1.37 is within noise for 20 seeds; if nightly sweeps keep landing above 1, the
+  long-run σ is the first suspect, and the toy test that checks it against Var(ΣX)/T the
+  second.
+
+### 2026-11-25 — Tuning notes, including what did not work (theoretical)
+
+- **Trick:** with easy tricks landing half the time the trick's uplift was about 15 points;
+  one wild reel on 2–4 multiplies the average grid's win about five-fold, so the landing odds
+  are the trick's main dial. Hard tricks turning two extra reels wild paid 37× bet when landed
+  and needed a 6% landing rate to stay in budget.
+- **Session:** a top rung of 15× put σ at 8.9 and the Session at 42 points; 8× gave σ 5.7.
+  Scar Cards of 5 and 10 marks made Sessions far too frequent once the trick rate was right
+  (1 in 112 at 10 marks); 14 marks gave 1 in 191 from the card.
+- **Fine tuning:** each 1/1000 step in every rung's land weight moves the RTP about 0.1 pp,
+  and the bottom rung alone about 0.017 pp, which put the RTP within 0.003 pp of 96%.
+- **Negative result, the cap:** P(reaching 2,500×) is about 10⁻¹⁶, nowhere near math-targets'
+  hope of 1 in 5–50 million. The Session's tail falls too fast: [1000, 2500) is already 1.3·10⁻⁸.
+  A reachable cap needs a deliberately heavier tail (a rare, steep top rung) and a retune,
+  noted in DR-013.

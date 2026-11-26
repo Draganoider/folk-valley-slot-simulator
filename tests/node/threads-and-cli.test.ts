@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PLACEHOLDER_CONFIG, formatSeed, runSimulation, seedFromText, summarise } from '../../src/engine';
+import { FOLK_VALLEY_CONFIG, PLACEHOLDER_CONFIG, formatSeed, runSimulation, seedFromText, summarise } from '../../src/engine';
 import type { SimulationJob } from '../../src/engine';
 import { runInWorkers } from '../../src/worker/pool';
 import { parseCli } from '../../src/worker/node/cli';
@@ -55,7 +55,8 @@ describe('npm run simulate', () => {
     expect(report.label).toBe('simulated');
     expect(report.completed).toBe(3000);
     expect(report.cancelled).toBe(false);
-    expect(report.summary).toEqual(JSON.parse(JSON.stringify(summarise(runSimulation(fakeSpin, config, job).stats))));
+    // Without --config the CLI plays the shipped configuration.
+    expect(report.summary).toEqual(JSON.parse(JSON.stringify(summarise(runSimulation(fakeSpin, FOLK_VALLEY_CONFIG, job).stats))));
   });
 
   it('fails cleanly on bad arguments, and runs the real spin', { timeout: 60_000 }, () => {

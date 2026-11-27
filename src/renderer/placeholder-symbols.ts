@@ -36,3 +36,6 @@ export function placeholderFor(symbol: string): PlaceholderSymbol {
 
 /** A reel a landing turned wild. */
 export const WILD_REEL: PlaceholderSymbol = { label: 'WILD', fill: 0xfde047, text: DARK };
+
+/** The labels a spinning reel scrolls through: a blur, not the strip, so nothing is implied about the stop. */
+export const SPIN_CYCLE: readonly string[] = ['GRAMPS', 'BOLT', 'KERB', 'CONE', 'ZIP', 'PEGS', 'DOT', 'GRIP'];

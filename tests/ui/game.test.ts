@@ -128,7 +128,7 @@ describe('preferences', () => {
     const store = memoryStore();
     expect(loadPreferences(store)).toEqual(DEFAULT_PREFERENCES);
     expect(DEFAULT_PREFERENCES.gore).toBe('full');
-    savePreferences(store, { gore: 'mild' });
+    savePreferences(store, { ...DEFAULT_PREFERENCES, gore: 'mild' });
     expect(loadPreferences(store).gore).toBe('mild');
     expect(loadPreferences(throwingStore)).toEqual(DEFAULT_PREFERENCES);
   });

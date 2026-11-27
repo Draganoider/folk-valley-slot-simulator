@@ -12,7 +12,8 @@ the player's game, the controls and the text that describes every spin; the reel
 | [`SceneHost.tsx`](SceneHost.tsx) | Mounts the PixiJS scene imperatively into a div; falls back to text only when WebGL cannot start |
 | [`use-reduced-motion.ts`](use-reduced-motion.ts) | Follows `prefers-reduced-motion` |
 | [`game/game.ts`](game/game.ts) | `GameState` (balance, bet, seed, spin index, the engine's `PlayerState`), `playSpin`, saving and loading |
-| [`game/prefs.ts`](game/prefs.ts) | The gore setting, Full by default (DR-009) |
+| [`game/prefs.ts`](game/prefs.ts) | The gore setting, Full by default (DR-009), and turbo, off by default |
+| [`game/playback.ts`](game/playback.ts) | `Playback`: plays a timeline on an injected clock and frame loop, with skip, speed and pause; `stepsShown` for the text |
 | [`game/storage.ts`](game/storage.ts) | Every `localStorage` access, each in try/catch |
 | [`game/describe.ts`](game/describe.ts) | Text for wins, tricks, bails, the Session and the meter |
 
@@ -24,9 +25,15 @@ the player's game, the controls and the text that describes every spin; the reel
   credits" refills it to 10,000. Nothing on the page offers to buy, sell or cash out anything.
 - **One `spin()` per paid spin, decided first** (rule 4). `playSpin` calls the engine once, and
   the new state, with the cost, the win and the new Scar Card, is saved before the scene shows
-  anything. The scene only receives frames read from the finished result. The balance on
-  screen drops by the cost at once and shows the win when the scene has finished; a reload
-  mid-spin shows the saved balance with the win already in it.
+  anything. The app then builds the result's timeline (`buildTimeline` with the gore setting
+  and reduced motion) and plays it; the scene only receives views of that timeline. The
+  balance on screen drops by the cost at once and takes the win when the count-up finishes; a
+  reload mid-spin shows the saved balance with the win already in it. The text under "Last
+  spin" describes each step only once the scene has resolved it, so it never tells an outcome
+  early.
+- **Controls while a spin plays.** Spin, bet, reset, seed and gore are locked. Skip (or Space
+  or Enter) seeks to the end and shows the final state. Turbo is a player speed, 2.5× (the
+  presentation's `turboFactor`), so it can change mid-spin. A hidden tab pauses the timeline.
 - **Saved in the browser** (DR-010). The balance, bet, seed, spin index and every bet level's
   Scar Card are one record, `folk-valley.game.v1`, so they never save out of step. A record
   that does not fit the configuration is discarded whole, not repaired. The gore setting is
@@ -39,10 +46,12 @@ the player's game, the controls and the text that describes every spin; the reel
 
 ## Accessibility
 
-Space or Enter spins from anywhere that is not a control (controls keep their own keys); every
+Space or Enter spins from anywhere that is not a control (controls keep their own keys), and
+skips while a spin plays; every
 control shows a focus ring; the canvas is `aria-hidden` and every win, trick, bail, Session spin
-and the Scar Card meter have text; a polite live region announces each spin's outcome; under
-`prefers-reduced-motion` the scene draws each end state at once.
+and the Scar Card meter have text; a polite live region reads each beat's narration as it starts and the spin's outcome at the
+end; under `prefers-reduced-motion` the presentation's shortened timeline plays, with no
+flash, scrolling or jump arc.
 
 ## Browser tests
 
@@ -52,5 +61,7 @@ installed Edge or Chrome instead of downloading Chromium. The tests compute ever
 figure by calling the engine with the same seed, and read the scene through
 `window.__fv.scene()`, a read-only snapshot that cannot start or change a spin.
 
-The presentation timeline (`src/presentation/`) is not wired in yet; until it is, `App.tsx`
-shows each frame of a result in turn with the scene's own short pauses.
+[`timeline.spec.ts`](../../tests/e2e/timeline.spec.ts) installs `page.clock`, which fakes
+`performance.now()` and `requestAnimationFrame`, and steps a seeded landing, bail and Session
+through their timelines, checking the scene at chosen moments, skip, turbo, reduced motion,
+and that gore Mild never shows the `broken` card. The other tests skip each spin to its end.

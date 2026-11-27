@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { FOLK_VALLEY_CONFIG, scarCardMarks, type SpinResult } from '../engine';
-import { framesOf } from '../renderer/frame';
+import { buildTimeline, type PlayerFrame, type Timeline } from '../presentation';
 import { createNullScene, type Scene, type SceneSnapshot } from '../renderer/scene';
+import { viewAt } from '../renderer/view';
 import {
   describeBaseAttempt,
   describeOutcome,
@@ -25,6 +26,7 @@ import {
   withSeed,
   type GameState,
 } from './game/game';
+import { Playback, speedFor, stepsShown, type FrameScheduler } from './game/playback';
 import { loadPreferences, savePreferences, type GoreSetting, type Preferences } from './game/prefs';
 import { browserStore } from './game/storage';
 import { SceneHost } from './SceneHost';
@@ -47,7 +49,14 @@ function randomSeed(): string {
   return Array.from(words, (w) => w.toString(16).padStart(8, '0')).join('');
 }
 
-/** The result being shown, and how many of its frames (base grid, then free spins) are on screen. */
+/** The real clock and frame loop the timeline plays on; Playwright's `page.clock` stands in for both. */
+const realClock = { now: () => performance.now() };
+const animationFrames: FrameScheduler = {
+  request: (callback) => requestAnimationFrame(() => callback()),
+  cancel: (handle) => cancelAnimationFrame(handle),
+};
+
+/** The result being shown, and how many of its steps (base spin, then free spins) the scene has resolved. */
 interface Showing {
   readonly result: SpinResult;
   readonly framesShown: number;
@@ -73,6 +82,9 @@ export function App() {
   const sceneRef = useRef<Scene>(createNullScene());
   const reducedRef = useRef(reducedMotion);
   reducedRef.current = reducedMotion;
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
+  const playbackRef = useRef<Playback | null>(null);
 
   // The whole record is saved on every change, so the balance and the Scar Cards move together.
   useEffect(() => {
@@ -83,6 +95,24 @@ export function App() {
   useEffect(() => {
     savePreferences(store, prefs);
   }, [prefs]);
+
+  // Turbo is a speed, so it can change mid-spin without changing anything shown.
+  useEffect(() => {
+    playbackRef.current?.setSpeed(speedFor(prefs.turbo));
+  }, [prefs.turbo]);
+
+  // A hidden tab pauses the timeline rather than racing through it unseen.
+  useEffect(() => {
+    const onVisibility = (): void => {
+      if (document.hidden) playbackRef.current?.pause();
+      else playbackRef.current?.resume();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      playbackRef.current?.stop();
+    };
+  }, []);
 
   const currentMarks = scarCardMarks(CONFIG, game.player, game.betLevel);
   const cardSize = CONFIG.scarCard.size;
@@ -127,19 +157,45 @@ export function App() {
     setShownBalance(before.balance - spinCost(CONFIG, before.betLevel));
     setShowing({ result: paid.result, framesShown: 0, done: false });
 
-    const frames = framesOf(paid.result);
-    for (let i = 0; i < frames.length; i++) {
-      await sceneRef.current.show(frames[i]!, { reducedMotion: reducedRef.current });
-      setShowing({ result: paid.result, framesShown: i + 1, done: false });
-    }
-    setShowing({ result: paid.result, framesShown: frames.length, done: true });
+    // The timeline only orders and times what the result already says (DR-014).
+    const timeline: Timeline = buildTimeline(paid.result, {
+      gore: prefsRef.current.gore,
+      reducedMotion: reducedRef.current,
+      turbo: false,
+    });
+    sceneRef.current.begin();
+    let steps = 0;
+    await new Promise<void>((resolve) => {
+      const onFrame = (frame: PlayerFrame): void => {
+        sceneRef.current.render(viewAt(timeline, frame.time));
+        const last = frame.entered.at(-1);
+        if (last !== undefined) setAnnouncement(last.narration);
+        const now = stepsShown(timeline, frame.time);
+        if (now !== steps && !frame.done) {
+          steps = now;
+          setShowing({ result: paid.result, framesShown: now, done: false });
+        }
+      };
+      const onDone = (): void => {
+        playbackRef.current = null;
+        resolve();
+      };
+      const playback = new Playback(timeline, realClock, animationFrames, { onFrame, onDone }, { speed: speedFor(prefsRef.current.turbo) });
+      playbackRef.current = playback;
+      playback.start();
+    });
+    // The count-up has finished: only now does the balance on screen take the win.
+    setShowing({ result: paid.result, framesShown: stepsShown(timeline, timeline.duration), done: true });
     setShownBalance(paid.game.balance);
     setAnnouncement(describeOutcome(paid.result));
     busyRef.current = false;
     setBusy(false);
   }, []);
 
-  // Space and Enter spin from anywhere that is not itself a control, which keeps its own keys.
+  const onSkip = useCallback((): void => playbackRef.current?.skip(), []);
+
+  // Space and Enter spin from anywhere that is not itself a control, which keeps its own keys;
+  // while a spin plays they skip to its end.
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (event.key !== ' ' && event.key !== 'Enter') return;
@@ -147,11 +203,12 @@ export function App() {
       const target = event.target;
       if (target instanceof Element && target.closest(INTERACTIVE) !== null) return;
       event.preventDefault();
-      void doSpin();
+      if (busyRef.current) onSkip();
+      else void doSpin();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [doSpin]);
+  }, [doSpin, onSkip]);
 
   const onReset = (): void => {
     const next = resetCredits(gameRef.current);
@@ -176,6 +233,7 @@ export function App() {
   };
 
   const onGore = (gore: GoreSetting): void => setPrefs({ ...prefs, gore });
+  const onTurbo = (turbo: boolean): void => setPrefs({ ...prefs, turbo });
 
   const cost = spinCost(CONFIG, game.betLevel);
 
@@ -226,7 +284,14 @@ export function App() {
           <button type="button" className="spin" onClick={() => void doSpin()} disabled={busy} data-testid="spin">
             Spin for {formatCredits(cost)}
           </button>
-          <p className="hint">Press Space or Enter to spin.</p>
+          <button type="button" onClick={onSkip} disabled={!busy} data-testid="skip">
+            Skip to the end
+          </button>
+          <label className="radio">
+            <input type="checkbox" checked={prefs.turbo} onChange={(e) => onTurbo(e.target.checked)} data-testid="turbo" />
+            Turbo ({speedFor(true)}× speed)
+          </label>
+          <p className="hint">Press Space or Enter to spin, and again to skip.</p>
           <button type="button" onClick={onReset} disabled={busy} data-testid="reset">
             Reset credits
           </button>
@@ -248,7 +313,7 @@ export function App() {
             <legend>Gore</legend>
             {(['full', 'mild'] as const).map((gore) => (
               <label key={gore} className="radio">
-                <input type="radio" name="gore" value={gore} checked={prefs.gore === gore} onChange={() => onGore(gore)} data-testid={`gore-${gore}`} />
+                <input type="radio" name="gore" value={gore} checked={prefs.gore === gore} disabled={busy} onChange={() => onGore(gore)} data-testid={`gore-${gore}`} />
                 {gore === 'full' ? 'Full' : 'Mild'}
               </label>
             ))}
@@ -273,7 +338,7 @@ export function App() {
 function SpinDetails({ showing, gore }: { showing: Showing; gore: GoreSetting }) {
   const { result, framesShown, done } = showing;
   const { base, session, betLevel } = result;
-  if (framesShown === 0) return <p>Reels spinning.</p>;
+  if (framesShown === 0) return <p>Playing the spin.</p>;
   const multiplier = base.attempt?.outcome === 'landed' ? base.attempt.winMultiplier : 1;
   return (
     <div data-testid="details">

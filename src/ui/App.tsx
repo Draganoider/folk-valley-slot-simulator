@@ -28,6 +28,7 @@ import {
 import { loadPreferences, savePreferences, type GoreSetting, type Preferences } from './game/prefs';
 import { browserStore } from './game/storage';
 import { SceneHost } from './SceneHost';
+import { StatsPanel } from './stats/StatsPanel';
 import { useReducedMotion } from './use-reduced-motion';
 
 const CONFIG = FOLK_VALLEY_CONFIG;
@@ -263,6 +264,7 @@ export function App() {
           {showing === null ? <p>No spin yet.</p> : <SpinDetails showing={showing} gore={prefs.gore} />}
         </section>
       </main>
+      <StatsPanel config={CONFIG} finishedSpin={showing?.done ? showing.result : null} />
       <p className="visually-hidden" aria-live="polite" data-testid="announcement">
         {announcement}
       </p>

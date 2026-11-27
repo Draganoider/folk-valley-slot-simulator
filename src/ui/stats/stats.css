@@ -1,0 +1,200 @@
+/* The statistics panel. Colours reuse the page's variables in src/ui/styles.css. */
+
+.stats {
+  margin-top: 1rem;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+}
+
+.stats-heading {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.stats-toggle {
+  width: 100%;
+  text-align: left;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  padding: 0.6rem 0.25rem;
+}
+
+.stats-body {
+  padding-bottom: 1rem;
+}
+
+.stats-explain dl {
+  display: grid;
+  grid-template-columns: minmax(10rem, max-content) 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.stats-explain dt {
+  font-weight: 700;
+}
+
+.stats-explain dd {
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .stats-explain dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+
+.stats-section {
+  border: 1px solid #33443b;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  min-width: 0;
+}
+
+.stats-section h3 {
+  margin: 0 0 0.25rem;
+}
+
+.stats-section h4 {
+  margin: 1rem 0 0.25rem;
+}
+
+/* A coloured edge tells the three sections apart, beside their headings. */
+.stats-theoretical {
+  border-top: 4px solid #60a5fa;
+}
+
+.stats-observed {
+  border-top: 4px solid var(--accent);
+}
+
+.stats-simulate {
+  border-top: 4px solid #a78bfa;
+}
+
+.stats-lede,
+.stats-note {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.stats-swing {
+  background: #2a2618;
+  border-left: 3px solid var(--accent);
+  padding: 0.4rem 0.6rem;
+  margin: 0.5rem 0;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.93rem;
+}
+
+.stats-table caption {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 0.25rem;
+}
+
+.stats-table th,
+.stats-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.25rem 0.4rem;
+  border-bottom: 1px solid #2d3a33;
+}
+
+.stats-table thead th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.stats-table tbody th {
+  font-weight: 400;
+}
+
+.stats-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.stats-detail {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stats-highlight {
+  background: #2b2320;
+}
+
+.stats-far td:last-child {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.stats-chart {
+  margin: 0;
+}
+
+.stats-bar-cell {
+  width: 35%;
+  vertical-align: middle;
+}
+
+.stats-bar {
+  display: block;
+  width: 100%;
+  height: 0.8rem;
+}
+
+.stats-bar rect {
+  fill: #60a5fa;
+}
+
+.stats-sim-controls fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.5rem;
+}
+
+.stats-sim-controls legend {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.stats-sim-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stats-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+
+.stats-progress progress {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.stats code {
+  word-break: break-all;
+}

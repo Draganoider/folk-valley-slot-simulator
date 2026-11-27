@@ -8,9 +8,9 @@ Update it when work lands on `test`.
 
 ## Milestones
 
-Milestone 0 (repository, CI and docs skeleton) is done. Milestone 1 (game design research)
-is done apart from its release. Milestone 2 (engine and simulation) is code-complete on
-`test`. See [`PLAN.md`](PLAN.md) for what each milestone means.
+Milestone 0 (repository, CI and docs skeleton) is done. Milestones 1 (game design research)
+and 2 (engine and simulation) shipped together as `v0.2.0`, and the nightly analysis runs
+from `main`. Milestone 3 (playable prototype) is under way. See [`PLAN.md`](PLAN.md) for what each milestone means.
 
 ## Landed so far
 
@@ -32,9 +32,6 @@ is done apart from its release. Milestone 2 (engine and simulation) is code-comp
 
 ## Not done yet
 
-- Milestone 1's `0.1.0` release, deferred by the owner.
-- Milestone 2: the nightly workflow runs only once it reaches `main`, because GitHub
-  schedules workflows from the default branch alone. Moving `main` is the owner's call.
 - Open from DR-013: the 2,500× cap is effectively unreachable (about 10⁻¹⁶ per spin).
   Whether a reachable top prize matters is the owner's call.
 - Milestone 3, the playable prototype, under way. Landed: the presentation timeline and its

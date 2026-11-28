@@ -8,6 +8,28 @@ While the version stays `0.x`, anything may change in any release.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-27
+
+### Added
+- A playable prototype in the browser: a React and Vite app with a PixiJS reel scene in
+  placeholder art, a virtual balance with a reset, bet levels, a seed field, and the Scar
+  Card and gore setting saved in the browser (DR-009, DR-010). It plays with storage blocked.
+- The presentation timeline (DR-014): each spin's result becomes a timed list of events,
+  played on a clock, so turbo is a speed and skip a seek. Reels stop one by one, wins and
+  the Kicker's wild reel light up, tricks land or bail with a cut-away on impact, injury and
+  patch-up cards follow, and the Session plays its free spins before the win counts up.
+  Reduced motion keeps every information beat, and Mild gore hides the broken card.
+- The statistics panel: theoretical figures from the analyser, your own session's observed
+  figures, and simulated runs of up to a million spins in Web Workers, kept in separate,
+  labelled sections with plain-language explanations of RTP, volatility, hit frequency and
+  losses disguised as wins.
+- Browser tests in CI, and the animation spike that settled riders as cut-out rigs with
+  painted held frames after the cut-away (DR-015).
+
+### Fixed
+- The observed RTP's 95% interval is shown only from 1,000 spins and never below 0%; after
+  25 spins it had read "-28% to 555%".
+
 ## [0.2.0] - 2026-11-25
 
 ### Added

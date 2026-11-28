@@ -22,6 +22,9 @@ The app builds the spin's timeline (`src/presentation/`, DR-014) and plays it wi
 every reel offset, rider position, fade and flash is computed in `viewAt` from how far through
 its event `t` is. So turbo (a player speed), skip (a seek to the end) and any seek draw exactly
 what playing to that time would, and the last view equals the timeline's `final` state.
+Pixi's ticker is off: the scene renders only when it is handed something to draw, so an idle
+page costs nothing per frame, and the browser tests can jump a fake clock to any moment with
+one frame (CI's runner draws WebGL in software, where per-frame cost adds up).
 
 ```ts
 interface Scene {

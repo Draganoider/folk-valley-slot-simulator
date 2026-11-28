@@ -121,7 +121,12 @@ export class PixiScene implements Scene {
       resolution: Math.min(globalThis.devicePixelRatio || 1, 2),
       autoDensity: false,
       antialias: true,
+      // No ticker: the scene renders only when it is given something new to draw, so an idle
+      // page, or a test stepping a fake clock, costs nothing per animation frame.
+      autoStart: false,
+      sharedTicker: false,
     });
+    app.ticker.stop();
     const canvas = app.canvas;
     canvas.setAttribute('aria-hidden', 'true');
     canvas.classList.add('scene-canvas');
@@ -151,7 +156,7 @@ export class PixiScene implements Scene {
     this.meterSize = view.scarCard.size;
     this.meterPulse = view.scarCard.change !== null;
     this.drawMeter();
-    // Pixi's own ticker renders on the next animation frame; nothing here waits for it.
+    this.app.render();
   }
 
   setScarCard(marks: number, size: number): void {
@@ -159,6 +164,7 @@ export class PixiScene implements Scene {
     this.meterSize = size;
     this.meterPulse = false;
     this.drawMeter();
+    this.app.render();
   }
 
   snapshot(): SceneSnapshot {
@@ -180,6 +186,7 @@ export class PixiScene implements Scene {
     this.rider.draw(null);
     this.card.draw(null);
     this.drawMeter();
+    this.app.render();
   }
 
   private drawReels(view: SceneView): void {

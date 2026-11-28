@@ -10,7 +10,8 @@ Update it when work lands on `test`.
 
 Milestone 0 (repository, CI and docs skeleton) is done. Milestones 1 (game design research)
 and 2 (engine and simulation) shipped together as `v0.2.0`, and the nightly analysis runs
-from `main`. Milestone 3 (playable prototype) is under way. See [`PLAN.md`](PLAN.md) for what each milestone means.
+from `main`. Milestone 3 (playable prototype) is code-complete on `test`.
+See [`PLAN.md`](PLAN.md) for what each milestone means.
 
 ## Landed so far
 
@@ -29,14 +30,17 @@ from `main`. Milestone 3 (playable prototype) is under way. See [`PLAN.md`](PLAN
     95.997% RTP meeting every DR-006 target, engine-against-analyser tests,
     `npm run verify:long` and a nightly workflow (PR #5, DR-013). A 10⁸-spin seeded run
     agrees with the analyser (see [`findings.md`](findings.md)).
+- Milestone 3, the playable prototype: the presentation timeline and its player (PR #6,
+  DR-014), the app shell with the placeholder reel scene (PR #7), the animation spike (PR #8,
+  DR-015: rigs for motion, painted held frames after the cut), the scene driven by the
+  timeline with turbo, skip and the gore setting (PR #10), and the statistics panel with
+  theoretical, observed and simulated figures kept apart (PR #9). CI builds the app and runs
+  the browser tests.
 
 ## Not done yet
 
 - Open from DR-013: the 2,500× cap is effectively unreachable (about 10⁻¹⁶ per spin).
   Whether a reachable top prize matters is the owner's call.
-- Milestone 3, the playable prototype, under way. Landed: the presentation timeline and its
-  player (PR #6, DR-014), the app shell with the placeholder reel scene and browser tests in CI
-  (PR #7), and the animation spike (PR #8, settled as DR-015). Still to do: driving the scene
-  from the timeline, the statistics panel, and the `broken`-level ComfyUI trial.
+- Milestone 4: the `broken`-level ComfyUI trial (DR-015) waits for the owner's key in `.env`.
 
 ## Groundwork beside the milestones

@@ -240,6 +240,14 @@ export interface ObservedView {
  * session, "simulated" for a simulation run). Reads only the summary's observed values: a
  * summary passed through `withTheoretical` gives the same view.
  */
+/**
+ * Below this many spins the observed RTP's 95% interval is not shown. The normal approximation
+ * needs many spins to hold for a payout this skewed: after 25 spins it gave "−28% to 555%",
+ * an interval that includes impossible values and tells the player nothing. The low end is
+ * also floored at 0%, since a return can't be negative.
+ */
+export const MIN_SPINS_FOR_INTERVAL = 1000;
+
 export function observedView(
   summary: SimulationSummary,
   voice: Voice,
@@ -282,10 +290,20 @@ export function observedView(
       row(
         'rtpInterval',
         `${V} RTP, 95% interval`,
-        ci === null
+        ci === null || n < MIN_SPINS_FOR_INTERVAL
           ? NOT_AVAILABLE
-          : { text: `${formatPercent(ci.low, 1).text} to ${formatPercent(ci.high, 1).text}`, spoken: `${formatPercent(ci.low, 1).spoken} to ${formatPercent(ci.high, 1).spoken}` },
-        ci === null ? null : { text: 'normal approximation', spoken: 'normal approximation' },
+          : {
+              text: `${formatPercent(Math.max(0, ci.low), 1).text} to ${formatPercent(ci.high, 1).text}`,
+              spoken: `${formatPercent(Math.max(0, ci.low), 1).spoken} to ${formatPercent(ci.high, 1).spoken}`,
+            },
+        ci === null
+          ? null
+          : n < MIN_SPINS_FOR_INTERVAL
+            ? {
+                text: `shown from ${MIN_SPINS_FOR_INTERVAL.toLocaleString('en-US')} spins; before that one big win swings it too far to mean anything`,
+                spoken: `shown from ${MIN_SPINS_FOR_INTERVAL} spins`,
+              }
+            : { text: 'normal approximation', spoken: 'normal approximation' },
       ),
       row('sigma', `${V} volatility (σ per paid spin)`, summary.sigma.value === null ? NOT_AVAILABLE : formatTimesBet(summary.sigma.value)),
       row('hit', `${V} hit frequency (any payout)`, formatPercent(summary.hitFrequency.value), countOf(c.hits)),

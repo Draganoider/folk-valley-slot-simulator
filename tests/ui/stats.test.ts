@@ -20,6 +20,7 @@ import {
   bucketLabels,
   compareToTheory,
   formatChance,
+  MIN_SPINS_FOR_INTERVAL,
   observedView,
   theoreticalView,
   volatilityClass,
@@ -211,6 +212,16 @@ describe('the observed view', () => {
     expect(rtp?.detail?.text).toBe(`± ${formatPercent(summary.rtpStandardError as number, 2).text} standard error`);
     const ci = view.headline.find((r) => r.id === 'rtpInterval');
     expect(ci?.detail?.text).toBe('normal approximation');
+  });
+
+  it('hides the RTP interval for short sessions, and never shows a negative return', () => {
+    const short = { ...summary, spins: MIN_SPINS_FOR_INTERVAL - 1, rtpInterval95: { low: -0.281, high: 5.545 } };
+    const hidden = observedView(short as SimulationSummary, 'observed').headline.find((r) => r.id === 'rtpInterval');
+    expect(hidden?.value.text).not.toContain('%');
+    expect(hidden?.detail?.text).toContain(`${MIN_SPINS_FOR_INTERVAL.toLocaleString('en-US')} spins`);
+    const long = { ...summary, spins: MIN_SPINS_FOR_INTERVAL, rtpInterval95: { low: -0.01, high: 1.9 } };
+    const floored = observedView(long as SimulationSummary, 'observed').headline.find((r) => r.id === 'rtpInterval');
+    expect(floored?.value.text.startsWith(formatPercent(0, 1).text)).toBe(true);
   });
 
   it('calls the largest win the largest seen, never the max win', () => {

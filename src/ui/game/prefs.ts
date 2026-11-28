@@ -10,16 +10,18 @@ export type GoreSetting = 'full' | 'mild';
 
 export interface Preferences {
   readonly gore: GoreSetting;
+  /** Plays each spin's timeline faster; a speed only, so it never changes what is shown. */
+  readonly turbo: boolean;
 }
 
-export const DEFAULT_PREFERENCES: Preferences = { gore: 'full' };
+export const DEFAULT_PREFERENCES: Preferences = { gore: 'full', turbo: false };
 
 export const PREFS_STORAGE_KEY = 'folk-valley.prefs.v1';
 
 export function parsePreferences(value: unknown): Preferences {
   if (typeof value !== 'object' || value === null) return DEFAULT_PREFERENCES;
-  const gore = (value as { gore?: unknown }).gore;
-  return { gore: gore === 'mild' ? 'mild' : 'full' };
+  const { gore, turbo } = value as { gore?: unknown; turbo?: unknown };
+  return { gore: gore === 'mild' ? 'mild' : 'full', turbo: turbo === true };
 }
 
 export function loadPreferences(store: KeyValueStore | null): Preferences {

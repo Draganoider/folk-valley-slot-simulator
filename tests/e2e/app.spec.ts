@@ -40,11 +40,12 @@ async function useSeed(page: Page, text: string): Promise<void> {
   await page.getByTestId('seed-apply').click();
 }
 
-/** Clicks Spin and waits until the whole result has been shown. */
+/** Clicks Spin, skips to the end of its timeline, and waits until the whole result is shown. */
 async function spinAndWait(page: Page): Promise<void> {
   const before = await page.getByTestId('spin-number').textContent();
   await page.getByTestId('spin').click();
   await expect(page.getByTestId('spin-number')).not.toHaveText(before ?? '');
+  await page.getByTestId('skip').click();
   await expect(page.getByTestId('total-win')).toBeVisible();
 }
 
@@ -78,7 +79,7 @@ test('a seeded spin shows the stops and the win the engine decided', async ({ pa
   const scene = await sceneSnapshot(page);
   expect(scene?.phase).toBe('shown');
   const lastFrame = result.session === null ? result.base.stops : result.session.spins.at(-1)?.stops;
-  expect(scene?.frame?.stops).toEqual(lastFrame);
+  expect(scene?.view?.stops).toEqual(lastFrame);
 });
 
 test('a winning spin lists every ways win and highlights it in the scene', async ({ page }) => {
@@ -90,7 +91,7 @@ test('a winning spin lists every ways win and highlights it in the scene', async
   await expect(page.getByTestId('wins').locator('li')).toHaveCount(found.result.base.wins.length);
   const scene = await sceneSnapshot(page);
   const expected = new Set(found.result.base.wins.flatMap((w) => w.positions.map((p) => `${p.reel},${p.row}`)));
-  expect(new Set(scene?.frame?.highlights.map((p) => `${p.reel},${p.row}`))).toEqual(expected);
+  expect(new Set(scene?.view?.highlights.map((p) => `${p.reel},${p.row}`))).toEqual(expected);
 });
 
 test('a landed trick turns the Kicker reel wild in the scene', async ({ page }) => {
@@ -102,8 +103,8 @@ test('a landed trick turns the Kicker reel wild in the scene', async ({ page }) 
   const attempt = found.result.base.attempt!;
   await expect(page.getByTestId('trick')).toContainText('landed');
   const scene = await sceneSnapshot(page);
-  expect(scene?.frame?.wildReels).toEqual(attempt.wildReels);
-  expect(scene?.frame?.wildReels[0]).toBe(attempt.kicker.reel);
+  expect(scene?.view?.wildReels).toEqual(attempt.wildReels);
+  expect(scene?.view?.wildReels[0]).toBe(attempt.kicker.reel);
 });
 
 test('the Scar Card and the balance survive a reload', async ({ page }) => {
@@ -157,9 +158,13 @@ test('Space and Enter spin from the keyboard, and focus is visible', async ({ pa
   await page.getByRole('heading', { name: 'Folk Valley' }).click();
   await page.keyboard.press('Space');
   await expect(page.getByTestId('spin-number')).toHaveText('2');
+  // While the spin plays, the same keys skip to its end.
+  await page.keyboard.press('Space');
   await expect(page.getByTestId('total-win')).toBeVisible();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('spin-number')).toHaveText('3');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('total-win')).toBeVisible();
 
   await page.getByTestId('spin').focus();
   await page.keyboard.press('Tab');
@@ -188,7 +193,9 @@ test.describe('with motion', () => {
     await page.goto('/');
     await expect.poll(async () => (await sceneSnapshot(page))?.renderer).toBe('pixi');
     await page.getByTestId('spin').click();
-    await expect.poll(async () => (await sceneSnapshot(page))?.phase).toBe('stopping');
+    await expect.poll(async () => (await sceneSnapshot(page))?.phase).toBe('playing');
+    await expect.poll(async () => (await sceneSnapshot(page))?.reelsStopped).toBeGreaterThan(0);
+    await page.getByTestId('skip').click();
     await expect(page.getByTestId('total-win')).toBeVisible();
     const scene = await sceneSnapshot(page);
     expect(scene?.reelsStopped).toBe(5);

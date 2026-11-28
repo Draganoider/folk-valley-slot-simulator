@@ -5,7 +5,7 @@ import type { FromWorker, ToWorker, WorkerHandle } from './protocol';
  * `runInWorkers`. The `new URL(..., import.meta.url)` form is the one Vite bundles.
  *
  * Typed by hand for the same reason as the worker entry: no DOM library in `tsconfig.json`.
- * Not exercised by the unit tests, which run under Node; the browser tests will.
+ * Not exercised by the unit tests, which run under Node; `tests/e2e/stats.spec.ts` runs it.
  */
 interface BrowserWorker {
   postMessage(message: ToWorker): void;
@@ -21,15 +21,18 @@ declare const URL: new (url: string, base: string) => WorkerUrl;
 declare global {
   // Present in browsers and Node alike; Vite's client typings will declare it too.
   interface ImportMeta {
-    readonly url: string;
+    // Not readonly, to match Vite's own declaration when the app's program includes this file.
+    url: string;
   }
 }
 
-type WorkerConstructor = new (url: WorkerUrl, options: { type: 'module' }) => BrowserWorker;
+// The browser's Worker, typed by hand. Vite recognises only the literal
+// `new Worker(new URL(...), ...)` form and bundles the worker from it; an aliased constructor
+// would ship the .ts file as a plain asset instead.
+declare const Worker: new (url: WorkerUrl, options: { type: 'module' }) => BrowserWorker;
 
 export function createBrowserWorker(): WorkerHandle {
-  const WorkerClass = (globalThis as unknown as { Worker: WorkerConstructor }).Worker;
-  const worker = new WorkerClass(new URL('./simulation.worker.ts', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./simulation.worker.ts', import.meta.url), { type: 'module' });
   return {
     postMessage: (message) => worker.postMessage(message),
     onMessage: (listener) => {

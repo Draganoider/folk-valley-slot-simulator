@@ -1,0 +1,51 @@
+# `src/ui/stats/` — the statistics panel
+
+What [`math-targets.md`](../../../docs/research/math-targets.md) section 7 asks for, in three
+separate, labelled sections ([`AGENTS.md`](../../../AGENTS.md) rule 6): the odds as the
+analyser computes them, the player's own spins, and simulations. `App.tsx` mounts it once,
+`<StatsPanel finishedSpin={…} />`, below the game; a button opens and closes it.
+
+| File | Owns |
+|---|---|
+| [`StatsPanel.tsx`](StatsPanel.tsx) | The panel: the toggle, the plain-language explanations, the three sections. Stays mounted while closed |
+| [`sections.tsx`](sections.tsx) | `TheoreticalSection`, `ObservedSection`, `SimulateSection` |
+| [`tables.tsx`](tables.tsx) | Tables with row and column headers, the distribution chart, `Num` (shown text plus a spoken form) |
+| [`figures.ts`](figures.ts) | The data shaping: `theoreticalView`, `observedView`, `compareToTheory`. Pure |
+| [`format.ts`](format.ts) | Percentages, × bet, "1 in N", exponents, z-scores, each with a spoken form. Pure |
+| [`observed-session.ts`](observed-session.ts) | The player's spins since the page opened, as the engine's `SimulationStats`. Pure |
+| [`simulation-job.ts`](simulation-job.ts) | The run sizes, lane length and worker count. Pure |
+| [`theoretical-report.ts`](theoretical-report.ts) | The analyser's report for the shipped configuration, written by `npm run analyse:panel`. Never edited by hand |
+| [`use-simulation.ts`](use-simulation.ts) | Runs a simulation with `runInWorkers`, with progress and cancel |
+
+The pure modules use no DOM or React, so `tests/ui/stats.test.ts` tests them in Node;
+`tests/e2e/stats.spec.ts` tests the panel in a browser.
+
+## Decisions
+
+- **The theoretical figures are computed ahead of time and committed.** `analyse(config)`
+  takes about 4 s on a fast machine and far longer on a slow phone or a 2-core CI runner, too
+  long for page load even in a worker. `npm run analyse:panel` writes the report to
+  `theoretical-report.ts`, and `tests/ui/stats.test.ts` fails unless it equals
+  `analyse(FOLK_VALLEY_CONFIG)` exactly, so it cannot go stale unnoticed: a change to the
+  configuration or the analyser fails `npm test` until the file is regenerated. Committing it
+  rather than generating it during the build keeps the build a plain Vite build, keeps
+  `npm run dev` from paying 4 s at every start, and shows each change to a theoretical figure
+  in the diff of the change that caused it. It is a TypeScript module rather than JSON so it is
+  typed as a `TheoreticalReport` without changing any tsconfig. The panel shows it only when
+  its config id matches the running configuration.
+- **Theoretical and observed never mix.** `theoreticalView` takes only a report labelled
+  theoretical; `observedView` only a summary labelled observed, and ignores its `theoretical`
+  slots; every label says "Theoretical", "Observed" or "Simulated". The z-scores in
+  `compareToTheory` come from `checkTolerance` in `verify.ts`, with the analyser's σ (the σ for
+  consecutive spins for the RTP, a Bernoulli σ for rates), and sit in their own column.
+- **The cap.** The max win is shown as 2,500× bet with the analyser's chance of reaching it
+  (about 1 in 10¹⁶) and a plain note that it is a bound, not a realistic outcome (DR-013).
+- **The player's session counts a spin when it has finished showing**, so the figures never
+  give away a result before the reels. A paid spin costs the same coins at every bet level, so
+  changing the bet keeps counting; a new seed starts a new session, because the statistics
+  take one seed's spins in order. It is kept in memory: a reload starts again.
+- **Simulations** use a random seed each run, shown with the command that repeats it, lanes of
+  100,000 spins, and up to four workers (one per lane, one core left free). The worker count
+  never changes the result. A cancelled run shows what was played, marked partial.
+- **No chart library.** The payout distribution is a table whose last column draws a bar on a
+  log scale: the table is the text alternative, the bars are `aria-hidden`.

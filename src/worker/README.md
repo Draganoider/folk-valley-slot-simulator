@@ -21,6 +21,7 @@ Only the transport and the way a host yields between batches differ.
 | [`node/pool.ts`](node/pool.ts) | `createNodeWorker()`, a worker thread as a `WorkerHandle` |
 | [`node/cli.ts`](node/cli.ts) | `npm run simulate`, the CLI |
 | [`node/analyse.ts`](node/analyse.ts) | `npm run analyse`, the analyser's theoretical report as JSON |
+| [`node/panel-report.ts`](node/panel-report.ts) | `npm run analyse:panel`, which writes the statistics panel's precomputed report, `src/ui/stats/theoretical-report.ts` |
 | [`node/verify-long.ts`](node/verify-long.ts) | `npm run verify:long`, the nightly analysis and long verification |
 
 ## Exactly the same result on any number of workers
@@ -103,8 +104,9 @@ The unit tests run under Node, without a browser:
 
 `@vitest/web-worker` was not used. It runs the worker's code in the same thread behind a
 `Worker` shim, so it would test no more than the in-process channel does, and would add a
-dependency. The browser Worker itself (`browser.ts`, `simulation.worker.ts`) is not
-exercised by the unit tests; the Playwright tests will cover it once there is a page.
+dependency. The browser Worker (`browser.ts`, `simulation.worker.ts`) is not
+exercised by the unit tests; the statistics panel's Playwright test
+(`tests/e2e/stats.spec.ts`) runs it in a real browser.
 
 ## Typechecking
 

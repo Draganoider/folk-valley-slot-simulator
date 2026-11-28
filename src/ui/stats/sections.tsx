@@ -12,14 +12,13 @@ import {
   SplitCompareTable,
   SplitTable,
 } from './tables';
-import type { TheoreticalState } from './use-theoretical';
 import { SIMULATION_LANE_LENGTH, SIMULATION_SIZES } from './simulation-job';
 import type { SimulationState } from './use-simulation';
 
 // ----------------------------------------------------------------- theoretical
 
-export function TheoreticalSection({ state }: { state: TheoreticalState }) {
-  const view = useMemo(() => (state.status === 'ready' ? theoreticalView(state.report) : null), [state]);
+export function TheoreticalSection({ report, configId }: { report: TheoreticalReport | null; configId: string }) {
+  const view = useMemo(() => (report === null ? null : theoreticalView(report)), [report]);
   return (
     <section className="stats-section stats-theoretical" aria-labelledby="stats-theoretical-heading" data-testid="stats-theoretical">
       <h3 id="stats-theoretical-heading">Theoretical: this game’s math</h3>
@@ -28,10 +27,8 @@ export function TheoreticalSection({ state }: { state: TheoreticalState }) {
         same for every player; nothing here comes from spins.
       </p>
       {view === null ? (
-        <p role="status" data-testid="theoretical-status">
-          {state.status === 'error'
-            ? `The theoretical figures could not be computed: ${state.message}`
-            : 'Working out the theoretical figures. This takes a few seconds, off the main page.'}
+        <p data-testid="theoretical-status">
+          No theoretical figures were computed for configuration <code>{configId}</code>, so none are shown.
         </p>
       ) : (
         <TheoreticalFigures view={view} />
@@ -251,7 +248,7 @@ export function SimulateSection({
             </>
           ) : (
             <>
-              <p className="stats-note">The theoretical figures are still being worked out; the comparison appears when they are ready.</p>
+              <p className="stats-note">No theoretical figures for this configuration, so there is nothing to compare with.</p>
               <FigureTable caption="Simulated return and volatility" rows={simView.headline} testId="sim-figures" />
             </>
           )}

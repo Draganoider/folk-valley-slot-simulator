@@ -3,13 +3,15 @@ import { FOLK_VALLEY_CONFIG, type GameConfig, type SpinResult } from '../../engi
 import { EMPTY_SESSION, recordSpin, type ObservedSession } from './observed-session';
 import { ObservedSection, SimulateSection, TheoreticalSection } from './sections';
 import { useSimulation } from './use-simulation';
-import { useTheoretical } from './use-theoretical';
+import { THEORETICAL_REPORT } from './theoretical-report';
 import './stats.css';
 
 /**
  * The statistics panel (math-targets section 7): theoretical figures from the analyser, the
  * player's observed figures, and simulations, in three separate, labelled sections
- * (AGENTS.md rule 6). Mounted once in App.tsx; it stays mounted while closed, so the observed
+ * (AGENTS.md rule 6). The theoretical figures are the analyser's report, computed ahead of
+ * time into `theoretical-report.ts` because `analyse` is too slow for page load. Mounted
+ * once in App.tsx; it stays mounted while closed, so the observed
  * session keeps counting and a simulation keeps running.
  *
  * `finishedSpin` is the spin the page has finished showing, or null. The panel counts each
@@ -19,9 +21,9 @@ import './stats.css';
 export function StatsPanel({ finishedSpin, config = FOLK_VALLEY_CONFIG }: { finishedSpin: SpinResult | null; config?: GameConfig }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<ObservedSession>(EMPTY_SESSION);
-  const theoretical = useTheoretical(config, open);
   const simulation = useSimulation(config);
-  const report = theoretical.status === 'ready' ? theoretical.report : null;
+  // Precomputed by `npm run analyse:panel`; a test keeps it equal to analyse() of the shipped config.
+  const report = THEORETICAL_REPORT.configId === config.id ? THEORETICAL_REPORT : null;
 
   useEffect(() => {
     if (finishedSpin !== null) setSession((s) => recordSpin(s, finishedSpin));
@@ -47,7 +49,7 @@ export function StatsPanel({ finishedSpin, config = FOLK_VALLEY_CONFIG }: { fini
       <div id="stats-body" className="stats-body" hidden={!open}>
         <Explainers />
         <div className="stats-columns">
-          <TheoreticalSection state={theoretical} />
+          <TheoreticalSection report={report} configId={config.id} />
           <ObservedSection session={session} report={report} />
           <SimulateSection config={config} state={simulation.state} report={report} onStart={simulation.start} onCancel={simulation.cancel} />
         </div>

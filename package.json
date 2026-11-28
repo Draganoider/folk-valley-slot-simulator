@@ -22,6 +22,7 @@
     "test:e2e": "playwright test",
     "simulate": "tsx src/worker/node/cli.ts",
     "analyse": "tsx src/worker/node/analyse.ts",
+    "analyse:panel": "tsx src/worker/node/panel-report.ts",
     "verify:long": "tsx src/worker/node/verify-long.ts"
   },
   "devDependencies": {

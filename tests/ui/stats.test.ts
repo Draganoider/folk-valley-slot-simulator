@@ -35,6 +35,9 @@ import {
 } from '../../src/ui/stats/format';
 import { EMPTY_SESSION, recordSpin } from '../../src/ui/stats/observed-session';
 import { SIMULATION_LANE_LENGTH, simulationJob, workerCount } from '../../src/ui/stats/simulation-job';
+import { THEORETICAL_REPORT } from '../../src/ui/stats/theoretical-report';
+import { panelReportSource } from '../../src/worker/node/panel-report';
+import { readFileSync } from 'node:fs';
 
 const CONFIG = FOLK_VALLEY_CONFIG;
 
@@ -66,6 +69,22 @@ beforeAll(() => {
   const outcome = runSimulation(spin, CONFIG, simulationJob(CONFIG, 20_000, formatSeed(seedFromText('stats-panel-test'))));
   summary = summarise(outcome.stats);
 }, 60_000);
+
+describe('the precomputed theoretical report', () => {
+  // analyse() takes about 4 s, shared with every test here through beforeAll, so the full
+  // comparison runs in npm test rather than only nightly.
+  it('equals analyse() of the shipped configuration exactly; run `npm run analyse:panel` if not', () => {
+    expect(THEORETICAL_REPORT.configId).toBe(CONFIG.id);
+    expect(THEORETICAL_REPORT.analyserVersion).toBe(report.analyserVersion);
+    // Through JSON, as the file was written: float64 survives the round trip exactly.
+    expect(JSON.parse(JSON.stringify(THEORETICAL_REPORT))).toEqual(JSON.parse(JSON.stringify(report)));
+  });
+
+  it('is byte for byte what the script writes', () => {
+    const committed = readFileSync('src/ui/stats/theoretical-report.ts', 'utf8').replace(/\r\n/g, '\n');
+    expect(committed).toBe(panelReportSource(report));
+  });
+});
 
 describe('formatting', () => {
   it('writes percentages, multiples of the bet and counts with spoken forms', () => {

@@ -14,7 +14,7 @@ analyser computes them, the player's own spins, and simulations. `App.tsx` mount
 | [`format.ts`](format.ts) | Percentages, × bet, "1 in N", exponents, z-scores, each with a spoken form. Pure |
 | [`observed-session.ts`](observed-session.ts) | The player's spins since the page opened, as the engine's `SimulationStats`. Pure |
 | [`simulation-job.ts`](simulation-job.ts) | The run sizes, lane length and worker count. Pure |
-| [`use-theoretical.ts`](use-theoretical.ts) | Runs `analyse` in [`analysis.worker.ts`](../../worker/analysis.worker.ts) once per page |
+| [`theoretical-report.ts`](theoretical-report.ts) | The analyser's report for the shipped configuration, written by `npm run analyse:panel`. Never edited by hand |
 | [`use-simulation.ts`](use-simulation.ts) | Runs a simulation with `runInWorkers`, with progress and cancel |
 
 The pure modules use no DOM or React, so `tests/ui/stats.test.ts` tests them in Node;
@@ -22,10 +22,17 @@ The pure modules use no DOM or React, so `tests/ui/stats.test.ts` tests them in 
 
 ## Decisions
 
-- **The analysis runs in a worker, when the panel first opens.** `analyse(config)` takes about
-  4 s. Precomputing it at build time would make the panel instant, but needs a build step and a
-  generated file to keep in step with the configuration; a worker needs neither, and costs a
-  player who never opens the panel nothing. The report is cached for the page's life.
+- **The theoretical figures are computed ahead of time and committed.** `analyse(config)`
+  takes about 4 s on a fast machine and far longer on a slow phone or a 2-core CI runner, too
+  long for page load even in a worker. `npm run analyse:panel` writes the report to
+  `theoretical-report.ts`, and `tests/ui/stats.test.ts` fails unless it equals
+  `analyse(FOLK_VALLEY_CONFIG)` exactly, so it cannot go stale unnoticed: a change to the
+  configuration or the analyser fails `npm test` until the file is regenerated. Committing it
+  rather than generating it during the build keeps the build a plain Vite build, keeps
+  `npm run dev` from paying 4 s at every start, and shows each change to a theoretical figure
+  in the diff of the change that caused it. It is a TypeScript module rather than JSON so it is
+  typed as a `TheoreticalReport` without changing any tsconfig. The panel shows it only when
+  its config id matches the running configuration.
 - **Theoretical and observed never mix.** `theoreticalView` takes only a report labelled
   theoretical; `observedView` only a summary labelled observed, and ignores its `theoretical`
   slots; every label says "Theoretical", "Observed" or "Simulated". The z-scores in

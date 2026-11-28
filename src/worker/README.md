@@ -17,11 +17,11 @@ Only the transport and the way a host yields between batches differ.
 | [`pool.ts`](pool.ts) | `runInWorkers(workers, config, job)`: splits a job with `splitJob`, one chunk per worker, and merges the outcomes in spin order. Returns the result and `cancel()` |
 | [`simulation.worker.ts`](simulation.worker.ts) | The browser Web Worker entry, serving the engine's `spin` |
 | [`browser.ts`](browser.ts) | `createBrowserWorker()`, a module Worker as a `WorkerHandle` |
-| [`analysis.worker.ts`](analysis.worker.ts) | A browser Web Worker that runs `analyse(config)` once for the statistics panel (about 4 s, too long for the main thread) |
 | [`node/thread.ts`](node/thread.ts) | The Node `worker_threads` entry, the same `serveSimulations` |
 | [`node/pool.ts`](node/pool.ts) | `createNodeWorker()`, a worker thread as a `WorkerHandle` |
 | [`node/cli.ts`](node/cli.ts) | `npm run simulate`, the CLI |
 | [`node/analyse.ts`](node/analyse.ts) | `npm run analyse`, the analyser's theoretical report as JSON |
+| [`node/panel-report.ts`](node/panel-report.ts) | `npm run analyse:panel`, which writes the statistics panel's precomputed report, `src/ui/stats/theoretical-report.ts` |
 | [`node/verify-long.ts`](node/verify-long.ts) | `npm run verify:long`, the nightly analysis and long verification |
 
 ## Exactly the same result on any number of workers
@@ -104,9 +104,9 @@ The unit tests run under Node, without a browser:
 
 `@vitest/web-worker` was not used. It runs the worker's code in the same thread behind a
 `Worker` shim, so it would test no more than the in-process channel does, and would add a
-dependency. The browser Workers (`browser.ts`, `simulation.worker.ts`, `analysis.worker.ts`) are not
+dependency. The browser Worker (`browser.ts`, `simulation.worker.ts`) is not
 exercised by the unit tests; the statistics panel's Playwright test
-(`tests/e2e/stats.spec.ts`) runs them in a real browser.
+(`tests/e2e/stats.spec.ts`) runs it in a real browser.
 
 ## Typechecking
 

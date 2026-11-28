@@ -48,9 +48,9 @@ test('the panel shows the theoretical RTP and the player’s observed spins', as
 
   await openPanel(page);
   const theoretical = page.getByTestId('stats-theoretical');
-  await expect(theoretical.getByRole('heading', { name: /Theoretical/ })).toBeVisible();
-  // The analysis runs in a worker and takes a few seconds.
-  await expect(page.getByTestId('theoretical-rtp')).toContainText('95.997%', { timeout: 60_000 });
+  await expect(theoretical.getByRole('heading', { name: /^Theoretical:/ })).toBeVisible();
+  // Precomputed, so it is there as soon as the panel opens.
+  await expect(page.getByTestId('theoretical-rtp')).toContainText('95.997%');
   await expect(page.getByTestId('theoretical-split-sessionFromScarCard')).toContainText('points');
   await expect(page.getByTestId('theoretical-max-win')).toContainText('not a realistic outcome');
   await expect(page.getByTestId('observed-empty')).toBeVisible();
@@ -76,22 +76,23 @@ test('the panel shows the theoretical RTP and the player’s observed spins', as
 test('a simulation runs to completion in workers, and a long one can be cancelled', async ({ page }) => {
   await page.goto('/');
   await openPanel(page);
-  await expect(page.getByTestId('theoretical-rtp')).toContainText('95.997%', { timeout: 60_000 });
+  await expect(page.getByTestId('theoretical-rtp')).toContainText('95.997%');
 
   await page.getByTestId('sim-size-10000').check();
   await page.getByTestId('sim-start').click();
-  await expect(page.getByTestId('sim-status')).toHaveText('Simulation finished: 10,000 spins.', { timeout: 60_000 });
+  await expect(page.getByTestId('sim-status')).toHaveText('Simulation finished: 10,000 spins.', { timeout: 20_000 });
   await expect(page.getByTestId('sim-meta')).toContainText('10,000 simulated paid spins');
   await expect(page.getByTestId('sim-compare-rtp')).toContainText('96.00%');
   await expect(page.getByTestId('sim-compare-rtp')).toContainText(/[+−]\d\.\d\d/);
   await expect(page.getByTestId('stats-simulate').getByRole('heading', { name: /^Simulate:/ })).toBeVisible();
   await expect(page.getByTestId('sim-results').getByRole('heading', { name: 'Simulated results' })).toBeVisible();
 
+  // A long run, cancelled as soon as it shows progress: it never has to finish, even on a 2-core runner.
   await page.getByTestId('sim-size-1000000').check();
   await page.getByTestId('sim-start').click();
-  await expect(page.getByTestId('sim-cancel')).toBeEnabled();
+  await expect(page.getByTestId('sim-progress')).toHaveAttribute('value', /^[1-9]\d*$/, { timeout: 15_000 });
   await page.getByTestId('sim-cancel').click();
-  await expect(page.getByTestId('sim-status')).toContainText('Simulation cancelled after', { timeout: 60_000 });
+  await expect(page.getByTestId('sim-status')).toContainText('Simulation cancelled after', { timeout: 15_000 });
   await expect(page.getByTestId('sim-status')).toContainText('of 1,000,000 spins');
   await expect(page.getByTestId('sim-start')).toBeEnabled();
 });
